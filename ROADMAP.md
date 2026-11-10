@@ -94,7 +94,7 @@
 ## 6. 已知边界（当前）
 
 - 本机私有面板只有地区-年粒度、月度面板仅气候协变量；公开版本已用内置模拟数据完整演示 `--monthly` 月度链路，待月度直报 CSV 接入后可补实测。
-- GitHub Actions 与 Pages 在 push 后需观察首次运行结果；本地等价命令与 YAML 语法已验证。
+- `R-CMD-check` 已在远端首次运行**通过**；Pages 已启用 `build_type=workflow`，nightly 每晚自动部署（仅合成数据）。
 - CI 目前只在 Ubuntu；本机 Windows + R 4.6.0 已实测全链路。
 
 ---

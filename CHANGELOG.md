@@ -13,6 +13,7 @@
 - **`docs/monthly/2026-11.md`**：本月任务归档（W1–W4 任务与验收、模拟数据演示、交付清单、踩坑与决策、已知边界、下月交接）
 - **`docs/monthly/TEMPLATE.md`**：月度归档模板，含月末 DoD 检查表；已结束月份归档只追加不回溯修改
 - 中英文 README 补仓库地址、CI 徽章、`git clone` 快速开始与「发布与逐月更新」章节；路线图速览指向 ROADMAP.md
+- **远端发布完成**：公开仓库 `Rythonme/EpiStack` 已建立并推送 51 个文件与 `v0.1` / `v0.1.1` 两个 tag；两个 GitHub Release 已创建；`R-CMD-check` 首次远端运行通过；Pages 启用 `build_type=workflow`（仅合成数据站点）
 - **内置模拟数据**：`demo/make_demo_data.R` 生成 31 地区面板、邻接、SES 与月度轴（含月度发病结局），固定种子、地区编码 `D01`–`D31`，不对应任何真实行政区；`case_hfrs_real/run_hfrs.R` 默认走模拟数据，`--local` 才读本机私有面板。公开仓库不含任何本机路径、真实数据文件名或真实观测值
 
 ### 约定

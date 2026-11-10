@@ -345,8 +345,9 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 **已发布**：[v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1)（立项）· [v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1)（W2/W3 工程化收尾，本月正式版本）。
 **下月**：2026-12 · `epi-ingest` · `v0.2`。
+**报告站**：[rythonme.github.io/EpiStack](https://rythonme.github.io/EpiStack/)（仅合成数据，每晚自动更新）。
 
-> 真实监测数据、本地实测报告与阶段缓存一律不入库；CI 只跑合成数据，并带隐私守卫。
+> 公开仓库**不含任何真实监测数据**：所有示例与 CI 默认使用 `demo/make_demo_data.R` 生成的模拟面板；本机私有面板只通过不入库的配置接入，数据与结果不公开；站点发布带隐私守卫。
 
 ---
 
