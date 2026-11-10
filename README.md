@@ -1,7 +1,11 @@
 # EpiStack — 端到端传染病时空分析与健康不平等体系（v2）
 
-[English version](README.en.md) · 当前版本 `v0.1.1`
+[English version](README.en.md) · 当前版本 `v0.1.1` · [路线图与逐月更新](ROADMAP.md) · [本月任务归档](docs/monthly/2026-11.md)
 
+[![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> **GitHub 主仓**：[github.com/Rythonme/EpiStack](https://github.com/Rythonme/EpiStack)（公开 · MIT · 2026-11-11 首次发布）
+>
 > **当前版本 `v0.1.1`（2026-11-10）**：在 `v0.1`（tag）基础上补齐 **W2 编排与 golden 冒烟测试**、**W3 CI / Pages / renv / 英文文档**。
 > `v0.1` = `epi-core` 正式 R 包 + 六层端到端切片 + HFRS 真实数据实测。
 >
@@ -10,6 +14,20 @@
 > **一句话**：从只读原始监测面板出发，经数据质控 → 监测预警 → 时空建模 → 不平等测度 → 综合报告 → 可复现编排，形成一条**一条命令跑通 L0→L6** 的开源体系；每月发布一个可独立安装的卫星仓加厚其中一层，年底集成成 `EpiStack 1.0`。
 >
 > **最重要的一条设计判断**：不要"先造半年零件、最后拼不起来"。**第一个月就打通一条薄而全的链路**，之后每月只替换某一层的实现，上下游契约不变，链路永远跑得通。这条链路今天已经在本机 R 4.6.0 跑通（见第 5 节实测）。
+
+---
+
+## 快速开始（30 秒，零第三方依赖）
+
+```bash
+git clone https://github.com/Rythonme/EpiStack.git
+cd EpiStack
+Rscript pipeline.R --check        # 合成数据六层全通 + golden 冒烟（37 PASS / 0 FAIL）
+Rscript pipeline.R --list         # 只看 L0–L6 分层计划
+```
+
+断网也能跑：不需要安装任何第三方 R 包，`bootstrap_core.R` 会自动从源码加载 `epi-core`。
+单独跑某条链路：`Rscript vertical_slice/run_e2e.R`（合成数据）或 `Rscript case_hfrs_real/run_hfrs.R`（真实数据仅在本机）。
 
 ---
 
@@ -149,39 +167,43 @@ cd "/f/00在研项目/05_Github/2026-11_epibulletin/vertical_slice"
 
 ---
 
-## 5.1 W4 · HFRS 真实数据端到端实测
+## 5.1 W4 · 面板适配器与模拟数据演示
+
+> **公开仓库不含、也不需要任何真实监测数据。** 默认链路全部使用
+> [demo/make_demo_data.R](demo/make_demo_data.R) 生成的纯合成数据（31 个 `D01`–`D31` 地区、
+> 固定种子 `20261110`），任何人 clone 后一条命令即可复现；真实面板只在本机通过私有配置接入。
 
 ```bash
-cd "/f/00在研项目/05_Github/2026-11_epibulletin/case_hfrs_real"
-"/d/R/bin/x64/Rscript.exe" run_hfrs.R
-# 拿到月度直报 CSV 后：
-"/d/R/bin/x64/Rscript.exe" run_hfrs.R --monthly your_monthly_counts.csv
+# 默认：内置模拟数据，六层全通
+Rscript case_hfrs_real/run_hfrs.R
+
+# 月度链路同样用模拟数据（地区编码与面板一致）
+Rscript case_hfrs_real/run_hfrs.R --monthly case_hfrs_real/output/demo_data/demo_counts_month.csv
+
+# 仅在本机、且已配置私有数据时：
+#   cp case_hfrs_real/data_paths.example.R case_hfrs_real/data_paths.local.R  # 填自己的路径
+Rscript case_hfrs_real/run_hfrs.R --local
 ```
 
-**只读数据源**（全部本地、不入库）：`incidence_province_year.csv`（651 行，31 省 × 2004–2024）、
-`prov_adj.graph`（真实 31 省邻接，海南已人工连广东）、
-`analysis_panel_2012_2024.csv`（真实人均 GDP 作 SES）、
-`panel_province_month.csv`（真实省-月气候面板 7812 行）。
+**模拟数据演示结果（最新年评估，纯合成）**：
 
-> **必须说明的数据口径**：本机**没有真实 HFRS 月度发病序列**。年鉴是年刊，只提供省-年发病率，
-> `cases_est` 是按人口反算的估计发病数；省-月面板只有气温/降水，**没有任何月度发病结局**。
-> 因此默认实测按**年际单侧基线**做异常检测，绝不把推算值伪装成月度实测。
-> 月度链路已用合成数据完成接口冒烟验证（1116 行、372 地区-期、检出 9 条信号），
-> 拿到月度直报 CSV 后用 `--monthly` 一键切到 `time_step="month"` 的季节性基线带，上下游契约不变。
+| 指标 | 结果 |
+|---|---|
+| 契约记录 / 质控 | 651 行 / 剔除 0 行 |
+| 最新年样本合计 | 2131 例（历史中位数 6449，−67.0%）→ 单侧升高预警 0 条 |
+| 单年 Moran's I | 0.406 (p = 0.003)，SES 空间梯度使集聚信号显著 |
+| 多年累积 Moran's I | 0.858 (p = 0.001) |
+| 集中指数 CI | −0.113；低/高 SES 组率比 1.45 |
+| 月度演示 | 1116 行 / 372 地区-期 / 11 条升高信号（季节性基线带） |
 
-**真实数据实测结果（2024 年评估）**：
+产物：`case_hfrs_real/output/面板分析报告_模拟.html`（单文件、内联 SVG、含口径声明）、
+`run_manifest_panel_模拟.json`、`alerts_panel_模拟.csv`。`output/` 整个目录已在 `.gitignore` 中排除。
 
-| 指标 | 结果 | 解读 |
-|---|---|---|
-| 契约记录 / 质控 | 651 行 / 剔除 0 行 | 真实面板完整，L0/L1 契约校验通过 |
-| 2024 全国合计 | 5588 例（历史中位数 10643，**−47.5%**） | 长期下降 → 单侧升高预警 **0 条**，监测应同时关注"低于基线"的结构性变化 |
-| 单年 Moran's I | −0.071 (p = 0.423) | 单年计数稀疏、检验功效不足 |
-| 2004–2024 累积 Moran's I | 0.189 (p = 0.074) | 累积率下空间集聚信号才显现 |
-| 集中指数 CI | −0.078 | 负担略偏向低人均 GDP 省份 |
-| 低/高 GDP 组率比 | 0.81 | 与 CI 反向：陕西一省占全国 28.4%（4.00/10万），GDP 恰好略高于中位数被划入"高组"——说明单一中位数切点不稳健 |
-
-产物：`output/HFRS真实数据实测报告.html`（单文件、3 张内联 SVG、含数据口径声明与三条发现）、
-`output/run_manifest_hfrs.json`、`output/alerts_hfrs.csv`。**`output/` 整个目录已在 `.gitignore` 中排除**，真实数据及其聚合结果只在本地。
+**本机私有面板**：路径只写在不入库的 `case_hfrs_real/data_paths.local.R`（模板
+[data_paths.example.R](case_hfrs_real/data_paths.example.R)），或用 `EPISTACK_HFRS_*` 环境变量注入。
+本机已完成一次真实面板端到端验收，**数据与结果均不公开**；其口径为年刊的地区-年发病率，
+月度面板仅含气候协变量、没有发病结局，因此按年际单侧基线检测，绝不把推算值伪装成月度实测。
+拿到月度直报 CSV 后 `--monthly` 可一键切到 `time_step="month"`，上下游契约不变。
 
 ---
 
@@ -233,6 +255,8 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 ## 6. 十二个月路线图（每月一个可发布仓库）
 
+> **完整状态表、逐月更新 SOP 与版本约定见 [ROADMAP.md](ROADMAP.md)**；每月任务归档在 [docs/monthly/](docs/monthly/2026-11.md)，本月为 [2026-11](docs/monthly/2026-11.md)。以下为速览。
+
 | 月份 | 卫星仓 | 加厚层 | 当月可独立交付的东西 |
 |---|---|---|---|
 | **2026-11** | `epi-core` + 薄切片 | L0 / L6 | ✅ **v0.1.0 已发布**：正式 R 包（40 项单测 + R CMD check）、六层全通、HFRS 真实数据实测、v0.1 tag |
@@ -248,7 +272,8 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 | 2027-09 | `epi-geoai` | L3 / D | 遥感协变量批处理、GeoFM 评测审计（清单 D32–D35 新趋势） |
 | 2027-10 | `epistack 1.0` | 全层 | 集成发布 + HFRS 完整案例复现 + 文档站 |
 
-> 每个月都有**能单独发出去的成果**，同时把体系里对应那一层从"薄实现"换成"正式实现"。
+> 每个月都有**能单独发出去的成果**，同时把体系里对应那一层从"薄实现"换成"正式实现"；
+> 月末打 `vX.Y` tag 并创建一个 GitHub Release，Release notes 指向当月归档。
 
 ---
 
@@ -303,6 +328,28 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 ---
 
+## 11. 发布与逐月更新
+
+本仓库采用「**一次发布总体 + 按月增量更新**」：先把体系设计、数据契约、可运行链路与本月任务一次性公开，之后每月只更新对应卫星仓与文档，主仓结构保持稳定。
+
+| 内容 | 文件 | 更新频率 |
+|---|---|---|
+| 体系总体（架构 / 契约 / HFRS 用例 / 验收 / 竞品） | [README.md](README.md) · [README.en.md](README.en.md) | 架构变更时 |
+| 12 个月状态表 + 逐月更新 SOP + 版本/隐私约定 | [ROADMAP.md](ROADMAP.md) | **每月** |
+| 当月任务、验收、实测、踩坑、下月交接 | [docs/monthly/2026-11.md](docs/monthly/2026-11.md)（模板 [TEMPLATE.md](docs/monthly/TEMPLATE.md)） | **每月新建一份** |
+| 版本变更明细 | [CHANGELOG.md](CHANGELOG.md) | 每次发版 |
+| 任务状态看板 | [项目进展看板.html](项目进展看板.html) + `kanban_data.js` | 状态变化时只改数据文件 |
+| 正式 R 包 | `epi-core/` | 卫星仓发版时 |
+
+**月度固定动作**：新建归档 → 发布卫星仓 → 主仓 `current_impl` 改一行 → `pipeline.R --all --check` + golden 冒烟 → 同步四处状态 → 打 `vX.Y` tag + 创建月度 Release。详见 [ROADMAP.md 第 4 节](ROADMAP.md)。
+
+**已发布**：[v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1)（立项）· [v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1)（W2/W3 工程化收尾，本月正式版本）。
+**下月**：2026-12 · `epi-ingest` · `v0.2`。
+
+> 真实监测数据、本地实测报告与阶段缓存一律不入库；CI 只跑合成数据，并带隐私守卫。
+
+---
+
 ## 附录：竞品直验（2026-11-10，链接均实际访问）
 
 | 仓库 | 定位 | 本体系的关系 |
@@ -316,4 +363,4 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 ---
 
-*v2 体系设计：2026-11-10 ｜ 依据 `Github/GitHub资源检索清单.md`（153 条、Top10 思路，更新至 2026-11-09）+ 本机实测*
+*v2 体系设计：2026-11-10 ｜ 首次公开发布：2026-11-11（[github.com/Rythonme/EpiStack](https://github.com/Rythonme/EpiStack)）｜ 依据 `Github/GitHub资源检索清单.md`（153 条、Top10 思路，更新至 2026-11-09）+ 本机实测*

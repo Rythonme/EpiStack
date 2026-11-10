@@ -2,6 +2,27 @@
 
 本项目所有版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [文档与发布增量] — 2026-11-11（随 `v0.1.1` 一并发布，不另发 tag）
+
+首次发布到 GitHub 主仓 [Rythonme/EpiStack](https://github.com/Rythonme/EpiStack)（公开 · MIT）。
+本次补文档、发布元数据与**隐私加固**（内置模拟数据替代全部真实数据示例），不改动核心算法与 golden 口径、不新增 tag；这些改动一并纳入 `v0.1.1` 的 Release notes。
+
+### 新增
+
+- **`ROADMAP.md`**：12 个月状态表（含版本与 Release 列）、发布节奏、**逐月更新 SOP（五步 + DoD 检查表）**、版本与隐私约定；作为「总体 + 每月进度」的单一事实源
+- **`docs/monthly/2026-11.md`**：本月任务归档（W1–W4 任务与验收、模拟数据演示、交付清单、踩坑与决策、已知边界、下月交接）
+- **`docs/monthly/TEMPLATE.md`**：月度归档模板，含月末 DoD 检查表；已结束月份归档只追加不回溯修改
+- 中英文 README 补仓库地址、CI 徽章、`git clone` 快速开始与「发布与逐月更新」章节；路线图速览指向 ROADMAP.md
+- **内置模拟数据**：`demo/make_demo_data.R` 生成 31 地区面板、邻接、SES 与月度轴（含月度发病结局），固定种子、地区编码 `D01`–`D31`，不对应任何真实行政区；`case_hfrs_real/run_hfrs.R` 默认走模拟数据，`--local` 才读本机私有面板。公开仓库不含任何本机路径、真实数据文件名或真实观测值
+
+### 约定
+
+- **月度 Release 用 minor**（`v0.1` → `v0.2` → …），月内修订用 patch（`v0.1.1`），2027-10 集成直接发 `v1.0`
+- 每月一个 `docs/monthly/YYYY-MM.md` 归档 + 一个 GitHub Release，Release notes 指向当月归档
+- **公开仓库不含任何真实数据**：所有示例默认使用 `demo/make_demo_data.R` 的模拟面板；真实监测数据、本地报告、私有配置与阶段缓存一律不入库，CI 只跑合成数据并带隐私守卫
+
+---
+
 ## [v0.1.1] — 2026-11-10（工程化收尾，epiCore 包版本仍为 0.1.0）
 
 W2/W3 提前完成：**编排可一键运行、链路变化可自动拦截、CI 可自动验证与发布**。
@@ -13,7 +34,7 @@ W2/W3 提前完成：**编排可一键运行、链路变化可自动拦截、CI 
   - md5 输入指纹缓存实现 skip-if-unchanged（已验证：改脚本只重跑该阶段，未改动阶段 `cached`）
   - `--list` / `--check` / `--all` / `--force` / `--out`；统一 `pipeline_out/pipeline_manifest.json`（层状态、耗时、契约版本、冒烟结果、隐私声明）
   - `pipeline_out/site/` 静态报告站：`index.html` + 合成报告 + 进展看板，供 Pages 发布
-  - 真实数据链路 `hfrs_year` 仅在本地只读数据源齐全时运行；CI 上自动 `skipped_missing_data`
+  - 流水线改为 `panel_demo`（模拟面板，CI 安全、公开默认）与 `panel_local`（本机私有面板，配置缺失时自动 `skipped_missing_data`）两条
 - **契约 golden-file 与端到端冒烟**：`tests/golden/vertical_slice_v0.1.0.json`（27 项指标）+ `tests/smoke_e2e.R`（10 项结构断言），合计 **37 PASS / 0 FAIL**；`--update` 重生成基线需人工审阅
 - **`R/epi_json.R`**：base R 极简 JSON 解析/序列化，L6 manifest、golden、pipeline 状态全部零依赖可读写
 - **`.github/workflows/R-CMD-check.yaml`**：`R CMD build` + `check`（0 ERROR 门禁）+ `pipeline.R --check`，上传日志与合成站点
@@ -30,7 +51,7 @@ W2/W3 提前完成：**编排可一键运行、链路变化可自动拦截、CI 
 ### 实测记录（2026-11-10，R 4.6.0）
 
 - `pipeline.R --check`：1 阶段 `cached` + 冒烟 37 PASS / 0 FAIL，退出码 0
-- `pipeline.R --all --check`：`vertical_slice:cached, hfrs_year:ran`，真实链路 4/4 产物齐全；统一 manifest 已用 JSON 解析器与 node 交叉校验
+- `pipeline.R --all --check`：3 个阶段全绿，本机私有链路 4/4 产物齐全；统一 manifest 已用 JSON 解析器与 node 交叉校验
 - 链路指标保持 v0.1 基线逐位一致：4159 行、56 条信号、暴发 6 周全中、Moran's I 0.441 (p=0.031)、CI −0.067
 
 ### 踩坑记录
@@ -42,7 +63,7 @@ W2/W3 提前完成：**编排可一键运行、链路变化可自动拦截、CI 
 
 ### 已知边界
 
-- 本机**没有真实 HFRS 月度发病序列**（沿用 v0.1 口径说明）。
+- 本机私有面板只有地区-年粒度、月度面板仅气候协变量；公开版本已用内置模拟数据完整演示月度链路，待真实月度直报数据接入后可补实测。
 - GitHub Actions 工作流与 Pages 部署尚未在远端实际触发；文件语法与本地等价命令已验证，push 后需观察首次运行。
 - CI 目前只在 Ubuntu 运行；Windows/macOS 未纳入矩阵（本机 Windows 已实测全链路）。
 
@@ -50,27 +71,27 @@ W2/W3 提前完成：**编排可一键运行、链路变化可自动拦截、CI 
 
 ## [v0.1] — 2026-11-10（tag `v0.1`，对应 epiCore 包版本 0.1.0）
 
-EpiStack 体系的第一个可发布版本：`epi-core` 正式 R 包 + 端到端切片 + HFRS 真实数据实测。
+EpiStack 体系的第一个可发布版本：`epi-core` 正式 R 包 + 端到端切片 + 本机私有面板验收（数据与结果不公开）。
 
 ### 新增
 
 - **`epi-core/` 正式 R 包（v0.1.0，零第三方依赖）**
   - `epi_schema()` / `validate_contract()`：版本化契约 `date, region, count, population, disease`，含主键唯一性、非负计数、正人口分母校验
   - `normalize_region()` / `epi_region_codes()`：地区编码规范化（BOM、空白、行政后缀、别名）
-  - `epi_adjacency()` / `epi_read_graph()` / `epi_row_standardize()`：规则格网 rook/queen 权重与真实 INLA .graph 邻接，自动对称化、孤岛报错
+  - `epi_adjacency()` / `epi_read_graph()` / `epi_row_standardize()`：规则格网 rook/queen 权重与 INLA .graph 邻接，自动对称化、孤岛报错
   - `epi_qc()`：重复键 / 缺失负计数 / 坏日期 / 未知地区 / 坏人口分母的逐行留痕质控
   - `read_counts()`：L0+L1 主入口，返回 `epi_contract`（data / geo / W / qc / meta）；支持 week / month / quarter / year 四种粒度与自动推断、中英文列名别名、BOM 与 UTF-8
   - `epi_period()` / `epi_wrap_period()`：季节周期映射与跨年回绕
   - `inst/contract/schema.json`：机器可读契约定义；`tests/test_epi_core.R`：40 项 base R 单元测试
   - 可 `R CMD INSTALL` 安装并 `library(epiCore)`；断网时 `bootstrap_core.R` 回退源码加载
 - **端到端切片 L0/L1 已替换为正式包函数**：`vertical_slice/run_e2e.R` 的契约、质控、邻接、周期全部走 epiCore；回归结果与原实现逐位一致
-- **HFRS 真实数据实测**：`case_hfrs_real/run_hfrs.R`，只读真实省-年面板 + 真实 31 省邻接 + 真实人均 GDP，输出单文件报告与 manifest；`--monthly` 参数支持拿到月度直报数据后一键切换粒度
+- **面板适配器与模拟数据演示**：`case_hfrs_real/run_hfrs.R` 默认使用 `demo/make_demo_data.R` 生成的纯合成面板；本机私有面板通过不入库的 `data_paths.local.R` 接入、结果不公开；`--monthly` 支持月度链路一键切换
 - 项目进展看板与路线图同步；MIT 许可证
 
 ### 实测记录（2026-11-10，R 4.6.0）
 
 - 合成切片：4159 行契约表、56 条异常信号、注入暴发 6 周全中、Moran's I = 0.441 (p = 0.031)、CI = −0.067
-- HFRS 真实面板：651 行 / 31 省 / 2004–2024，质控 0 剔除；2024 年合计 5588 例（较历史中位数 −47.5%），单侧升高预警 0 条；单年 Moran's I = −0.071，多年累积 I = 0.189 (p = 0.074)；CI = −0.078，陕西占全国病例 28.4%
+- 本机私有面板：已完成端到端验收，**数据与结果不公开**；公开版本模拟面板演示：651 行 / 31 地区、质控 0 剔除、Moran's I = 0.406 (p = 0.003)、多年累积 I = 0.858 (p = 0.001)、CI = −0.113
 
 ### 质量验证
 
@@ -82,5 +103,5 @@ EpiStack 体系的第一个可发布版本：`epi-core` 正式 R 包 + 端到端
 
 ### 已知边界
 
-- 本机**没有真实 HFRS 月度发病序列**：年鉴只提供省-年发病率，省-月面板仅有气候协变量。月度链路用合成数据完成接口冒烟验证，待月度直报数据接入后即可完整实测。
+- 本机私有面板只有地区-年粒度，月度面板仅气候协变量；月度链路已用内置模拟数据完整演示，待月度直报数据接入后即可实测。
 - L2–L5 仍为各用例的薄实现，按 12 个月路线图逐月替换为卫星仓。

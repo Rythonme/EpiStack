@@ -3,7 +3,7 @@
 #
 # 用法：
 #   Rscript pipeline.R                 # 跑合成数据六层切片（CI 安全，默认）
-#   Rscript pipeline.R --all          # 额外跑 HFRS 真实数据链路（仅本机有数据时）
+#   Rscript pipeline.R --all          # 额外跑本机私有面板链路（仅本机有配置时）
 #   Rscript pipeline.R --check        # 跑链路 + golden 集成冒烟测试
 #   Rscript pipeline.R --force        # 忽略指纹缓存，强制重跑
 #   Rscript pipeline.R --list         # 只打印分层计划
@@ -11,7 +11,7 @@
 #
 # 设计：声明式分层计划（R/pipeline_plan.R）+ 输入指纹缓存 + 阶段产物校验，
 # 用 base R 复现 targets 的 skip-if-unchanged 语义；不装 targets 也能一条命令跑通。
-# 真实数据链路只在本机执行，产物落 pipeline_out/ 且不入库、不发布。
+# 公开版本默认只跑纯模拟数据；本机私有面板链路只在本机执行，产物落 pipeline_out/ 且不入库、不发布。
 # =============================================================
 
 cli_args <- commandArgs(trailingOnly = TRUE)
@@ -89,6 +89,7 @@ run_stage <- function(p, force = FALSE) {
 
   # 同一会话内 source：避免 Windows 中文路径经命令行传给子进程乱码
   Sys.setenv(EPISTACK_PROJECT_ROOT = root, EPISTACK_OUT_DIR = od)
+  if (length(p$env)) do.call(Sys.setenv, p$env)
   env <- new.env(parent = globalenv())
   t0 <- Sys.time()
   err <- NULL
@@ -120,6 +121,7 @@ build_site <- function(results) {
   copy <- function(from, to) if (file.exists(from))
     file.copy(from, file.path(site, to), overwrite = TRUE)
   copy(file.path(out_root, "vertical_slice", "端到端演示报告.html"), "report.html")
+  copy(file.path(out_root, "panel_demo", "面板分析报告_模拟.html"), "demo-report.html")
   copy(file.path(root, "项目进展看板.html"), "kanban.html")
   copy(file.path(root, "kanban_data.js"), "kanban_data.js")
 
@@ -149,13 +151,14 @@ build_site <- function(results) {
     ' ｜ 生成于 ', format(Sys.time(), "%Y-%m-%d %H:%M"), '</p>',
     '<div class="cards">',
     '<a class="card" href="report.html">端到端演示报告<small>合成数据 · 六层链路 · 单文件离线 HTML</small></a>',
+    '<a class="card" href="demo-report.html">模拟面板演示报告<small>31 地区面板 · 预警 / 空间 / 不平等 · 纯合成</small></a>',
     '<a class="card" href="kanban.html">项目进展看板<small>主线任务、里程碑与月度路线图</small></a>',
     '</div>',
     '<div class="box"><h3>本次编排执行状态</h3><table>',
     '<tr><th>流水线</th><th>状态</th><th>耗时(秒)</th><th>数据</th></tr>', rows,
     '</table></div>',
-    '<div class="note"><b>隐私声明：</b>本页仅发布<b>合成数据</b>报告与项目看板。',
-    'HFRS 真实监测数据及其分析报告只在本机执行，不入库、不上传、不发布。</div>',
+    '<div class="note"><b>隐私声明：</b>本页所有报告均基于<b>内置模拟数据</b>，不含任何真实观测记录。',
+    '本机私有面板及其分析报告只在本机执行，不入库、不上传、不发布。</div>',
     '</div></body></html>')
   writeLines(enc2utf8(idx), file.path(site, "index.html"), useBytes = TRUE)
   invisible(site)

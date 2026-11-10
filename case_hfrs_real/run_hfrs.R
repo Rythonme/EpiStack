@@ -1,24 +1,33 @@
 # =============================================================
-# EpiStack v0.1.0 · HFRS 真实数据端到端实测（W4）
+# EpiStack v0.1.1 · 地区面板端到端适配器（默认使用内置模拟数据）
 #
 # 用法：
-#   Rscript run_hfrs.R                       # 省-年真实面板（本机现有真实数据）
-#   Rscript run_hfrs.R --monthly <月度CSV>   # 拿到月度直报数据后切到月度链路
+#   Rscript run_hfrs.R                       # 内置模拟数据（公开仓库默认，CI 安全）
+#   Rscript run_hfrs.R --local               # 本机配置的私有面板（数据不入库）
+#   Rscript run_hfrs.R --monthly <月度CSV>   # 切到 time_step="month" 的月度链路
 #
-# 只读外部数据，绝不回写源文件；产物全部落在本项目 output/ 且不入库。
+# 隐私约定：本文件不含任何本机路径、真实数据文件名或真实观测值。
+#   公开仓库默认跑纯合成数据；本机私有面板路径只放在不入库的
+#   case_hfrs_real/data_paths.local.R（模板见 data_paths.example.R），
+#   或用 EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES / _MONTHLY 环境变量注入。
+#   只读外部数据，绝不回写源文件；产物全部落在本项目 output/ 且不入库。
 #
-# 重要口径声明：本机真实 HFRS 发病数据来自《中国卫生健康统计年鉴》年刊，
-#   粒度为「省-年」；panel_province_month.csv 的真实「省-月」面板只有气候变量，
-#   没有发病结局。因此本脚本默认按年际基线做异常检测，并在报告里明确标注。
-#   一旦提供月度发病 CSV，--monthly 分支会用同一个 read_counts() 契约
-#   切到 time_step="month" 的季节性基线带链路，无需改动上下游。
+# 口径说明：面板粒度为「地区-年」，月度面板只有气候协变量、没有发病结局，
+#   因此默认按年际基线做异常检测；拿到月度发病 CSV 后 --monthly 会用
+#   同一个 read_counts() 契约切到季节性基线带链路，无需改动上下游。
 # =============================================================
 
 args <- commandArgs(trailingOnly = TRUE)
 ix_m <- match("--monthly", args)
 monthly_csv <- if (!is.na(ix_m) && length(args) >= ix_m + 1L) args[ix_m + 1L] else NULL
-# 月度模式单独命名产物，避免覆盖真实省-年实测报告
+# 月度模式单独命名产物，避免覆盖默认报告
 suffix <- if (!is.null(monthly_csv)) "_月度" else ""
+
+# 数据模式：公开仓库默认纯模拟；--local 或 EPISTACK_HFRS_MODE=local 才读本机私有面板
+mode_env <- Sys.getenv("EPISTACK_HFRS_MODE", unset = "")
+hf_mode <- if (nzchar(mode_env)) mode_env else if ("--local" %in% args) "local" else "demo"
+is_demo <- identical(hf_mode, "demo")
+if (is_demo) suffix <- paste0(suffix, "_模拟")
 
 a0 <- commandArgs(trailingOnly = FALSE)
 f0 <- sub("^--file=", "", a0[grep("^--file=", a0)])
@@ -29,13 +38,6 @@ if (!nzchar(root)) root <- dirname(here)
 source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
 
-# ---------------- 只读数据源配置（改成你自己的路径即可复跑） ----------------
-DATA <- list(
-  incidence = "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/incidence_province_year.csv",
-  graph     = "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/prov_adj.graph",
-  ses       = "F:/00在研项目/02_统计建模/【统计建模】一组/00_原始数据/医疗卫生不平等性/01_面板与字典/analysis_panel_2012_2024.csv",
-  monthly   = "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/panel_province_month.csv"
-)
 out_env <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
 out_dir <- if (nzchar(out_env)) out_env else file.path(here, "output")
 cache_dir <- file.path(out_dir, "cache")
@@ -43,6 +45,28 @@ dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
 
 SEED <- 20261110L
 K_SIGMA <- 1.645
+
+# ---------------- 数据源配置（公开仓库不含任何本机路径） ----------------
+needed <- c("incidence", "graph", "ses", "monthly")
+DATA <- list(incidence = "", graph = "", ses = "", monthly = "")
+
+if (is_demo) {
+  # 纯合成：固定种子生成同结构的 31 地区面板、邻接、SES 与月度轴
+  source(file.path(root, "demo", "make_demo_data.R"), encoding = "UTF-8", local = TRUE)
+  DATA <- epi_make_demo_data(file.path(out_dir, "demo_data"), seed = SEED)[needed]
+} else {
+  # 本机私有配置（不入库）；也可用 EPISTACK_HFRS_* 环境变量逐项覆盖
+  local_cfg <- file.path(root, "case_hfrs_real", "data_paths.local.R")
+  if (file.exists(local_cfg)) source(local_cfg, local = TRUE, encoding = "UTF-8")
+  for (nm in names(DATA)) {
+    ev <- Sys.getenv(paste0("EPISTACK_HFRS_", toupper(nm)), unset = "")
+    if (nzchar(ev)) DATA[[nm]] <- ev
+  }
+}
+bad <- needed[!nzchar(unlist(DATA[needed])) | !file.exists(unlist(DATA[needed]))]
+if (length(bad))
+  stop(sprintf("数据源未配置或不存在（%s）。公开仓库默认 --demo；本机私有数据请复制 case_hfrs_real/data_paths.example.R 为 data_paths.local.R，或设置 EPISTACK_HFRS_* 环境变量。",
+               paste(bad, collapse = ", ")), call. = FALSE)
 t_start <- Sys.time()
 stage_log <- list()
 esc <- function(x) {
@@ -64,14 +88,14 @@ read_bom_csv <- function(p) {
   d
 }
 
-# ---------------- L0 / L1 · 真实面板 -> 正式契约 ----------------
+# ---------------- L0 / L1 · 面板 -> 正式契约 ----------------
 inc <- read_bom_csv(DATA$incidence)
 ses <- read_bom_csv(DATA$ses)
 mo  <- read_bom_csv(DATA$monthly)
 for (p in c(DATA$incidence, DATA$graph, DATA$ses, DATA$monthly))
-  if (!file.exists(p)) stop(sprintf("真实数据源不存在：%s", p), call. = FALSE)
+  if (!file.exists(p)) stop(sprintf("数据源不存在：%s", p), call. = FALSE)
 
-# 邻接图的节点顺序 = T14d 中 sort(unique(prov_s))，必须用同一顺序构造 geo
+# 邻接图节点顺序 = sort(unique(province))，必须用同一顺序构造 geo
 provs <- sort(unique(inc$province))
 ses24 <- ses[ses$year == 2024, ]
 gdp <- as.numeric(ses24$X1_gdp_pcap[match(provs, ses24$prov)])
@@ -80,7 +104,7 @@ pop24 <- as.numeric(inc$pop[inc$year == 2024][match(provs, inc$province[inc$year
 geo <- data.frame(region = provs, population = pop24, pop = pop24,
                   ses = ses_norm, gdp_pcap = gdp, stringsAsFactors = FALSE)
 
-# 年鉴给的是发病率，cases_est 为按人口反算的估计发病数；取整后作为计数结局
+# cases_est 为面板提供的计数结局（模拟或本机配置），取整后作为计数
 hfrs_raw <- data.frame(
   year = inc$year, province = inc$province,
   cases = pmax(0L, as.integer(round(inc$cases_est))),
@@ -96,33 +120,35 @@ if (!is.null(monthly_csv)) {
                       source_label = basename(monthly_csv))
   time_step <- "month"
   n_periods <- 12L
-  data_label <- "月度直报数据（用户提供）"
+  data_label <- if (is_demo) "模拟月度面板（用户提供）" else "月度数据（用户提供）"
 } else {
   core <- read_counts(
     hfrs_raw, geo = geo, graph = DATA$graph,
     mapping = list(date = "year", region = "province", count = "cases",
                    population = "pop", disease = "disease"),
     time_step = "year", n_periods = length(unique(inc$year)),
-    disease = "HFRS", source_label = "中国卫生健康统计年鉴（省-年，cases_est 反算）"
+    disease = "HFRS", source_label = if (is_demo) "内置模拟数据（地区-年）" else "本机配置面板（地区-年）"
   )
   time_step <- "year"
   n_periods <- length(unique(inc$year))
-  data_label <- "真实省-年发病面板（年鉴反算）"
+  data_label <- if (is_demo) "模拟面板（合成，固定种子）" else "本机配置面板（私有，不入库）"
 }
 validate_contract(core)
 contract <- core$data
+if (nrow(contract) == 0L)
+  stop("输入数据被质控全部剔除：请检查 region 列是否与面板地区编码一致（内置模拟数据为 D01..D31），以及日期/计数列是否可解析。", call. = FALSE)
 W <- core$W
 qc <- core$qc$report
 n_drop <- core$qc$dropped
 stopifnot(identical(rownames(W), provs), identical(colnames(W), provs))
 saveRDS(contract, file.path(cache_dir, "L0_contract.rds"))
-mark_stage("L0 epi-core", sprintf("契约 v%s 校验通过；%s 共 %d 行、%d 地区；真实邻接 %dx%d（%s）",
+mark_stage("L0 epi-core", sprintf("契约 v%s 校验通过；%s 共 %d 行、%d 地区；邻接 %dx%d（%s）",
                                   EPI_CONTRACT_VERSION, data_label, core$meta$n_raw,
                                   length(provs), nrow(W), ncol(W), core_mode))
-mark_stage("L1 epi-ingest", sprintf("read_counts() 质控剔除 %d 行；清洁契约表 %d 行（真实面板无脏行即为通过）",
+mark_stage("L1 epi-ingest", sprintf("read_counts() 质控剔除 %d 行；清洁契约表 %d 行（面板无脏行即为通过）",
                                     n_drop, nrow(contract)))
 
-# ---------------- 月度时间轴接入核验（真实省-月气候面板） ----------------
+# ---------------- 月度时间轴接入核验（气候面板） ----------------
 mo$date <- as.Date(paste0(mo$year, "-", sprintf("%02d", mo$month), "-01"))
 mo$period <- epi_period(mo$date, 12L, "month")
 monthly_axis <- list(
@@ -133,7 +159,7 @@ monthly_axis <- list(
     "该面板仅含 temp/prec/season 气候协变量，不含发病结局" else
     "内置面板仅气候；本次月度发病结局来自 --monthly 指定的 CSV"
 )
-mark_stage("L1b 月度轴", sprintf("真实省-月气候面板 %d 行、%d 地区、%d 个自然月周期；%s",
+mark_stage("L1b 月度轴", sprintf("月度气候面板 %d 行、%d 地区、%d 个自然月周期；%s",
                                  monthly_axis$rows, monthly_axis$regions,
                                  monthly_axis$periods, monthly_axis$note))
 
@@ -143,7 +169,7 @@ hist <- contract[contract$year < cur_year, ]
 current <- contract[contract$year == cur_year, ]
 
 if (time_step == "year") {
-  # 年度无季节周期：用每省全历史 log(count+0.5) 的单侧上界评估最新年
+  # 年度无季节周期：用每地区全历史 log(count+0.5) 的单侧上界评估最新年
   band <- data.frame(region = provs, baseline = NA_real_, upper = NA_real_,
                      stringsAsFactors = FALSE)
   for (i in seq_along(provs)) {
@@ -163,7 +189,7 @@ if (time_step == "year") {
   cur$level[cur$exceed] <- "关注"
   cur$level[cur$ratio >= 1.5] <- "预警"
   cur$level[cur$ratio >= 2.0] <- "告警"
-  alert_note <- "年际基线：每省 2004–2023 年 log(count+0.5) 均值 + 1.645σ 单侧上界；年度数据无「连续超限」概念，分级按超出倍数"
+  alert_note <- "年际基线：每地区历史年 log(count+0.5) 均值 + 1.645σ 单侧上界；年度数据无「连续超限」概念，分级按超出倍数"
 } else {
   # 月度：与合成切片同构的季节性基线带（历史同期 ±1 期）
   band <- expand.grid(region = provs, period = 1L:n_periods,
@@ -203,7 +229,7 @@ if (time_step == "year") {
 alerts <- cur[cur$level != "正常",
               c("date", "region", "count", "upper", "ratio", "level")]
 alerts <- alerts[order(match(alerts$level, c("告警", "预警", "关注")), -alerts$count), ]
-utils::write.csv(alerts, file.path(out_dir, paste0("alerts_hfrs", suffix, ".csv")),
+utils::write.csv(alerts, file.path(out_dir, paste0("alerts_panel", suffix, ".csv")),
                  row.names = FALSE, fileEncoding = "UTF-8")
 saveRDS(list(band = band, cur = cur, alerts = alerts),
         file.path(cache_dir, "L2_alert.rds"))
@@ -212,19 +238,19 @@ mark_stage("L2 epi-alert", sprintf("%d 年评估 %d 地区-期；升高异常 %d
                                    sum(cur$level == "告警"),
                                    if (time_step == "year") "年际单侧上界" else "季节性基线带"))
 
-# 全国长期趋势：解释「为什么单侧升高预警零命中」
+# 总体长期趋势：解释「为什么单侧升高预警零命中」
 agg_year <- aggregate(count ~ year, data = contract, sum)
 total_cur <- sum(current$count)
 hist_median <- stats::median(agg_year$count[agg_year$year < cur_year])
 change_pct <- 100 * (total_cur / hist_median - 1)
-mark_stage("L2b 趋势", sprintf("全国合计 %d 例，历史中位数 %d 例（%+.1f%%）；%s",
+mark_stage("L2b 趋势", sprintf("样本合计 %d 例，历史中位数 %d 例（%+.1f%%）；%s",
                                total_cur, round(hist_median), change_pct,
                                if (nrow(alerts) == 0L) "单侧升高预警零命中" else
                                  sprintf("检出 %d 条升高信号", nrow(alerts))))
 alert_note <- paste0(alert_note,
-  sprintf("；%d 年全国合计 %d 例，较历史中位数 %+.1f%%，呈长期下降", cur_year, total_cur, change_pct))
+  sprintf("；%d 年样本合计 %d 例，较历史中位数 %+.1f%%，呈长期下降", cur_year, total_cur, change_pct))
 
-# ---------------- L3 · 全局 Moran's I（真实省邻接） ----------------
+# ---------------- L3 · 全局 Moran's I（面板邻接） ----------------
 tot <- aggregate(count ~ region, data = current, sum)
 tot <- merge(geo[, c("region", "pop")], tot, by = "region", all.x = TRUE)
 tot <- tot[match(provs, tot$region), ]          # 强制与 W 的 dimnames 对齐
@@ -239,7 +265,7 @@ I_obs <- moran_I(x)
 set.seed(SEED + 1L)
 I_null <- replicate(999L, moran_I(sample(x)))
 p_val <- (1 + sum(abs(I_null) >= abs(I_obs))) / 1000L
-# 稳健性：单年计数稀疏，补算 2004–2024 累积报告率的空间自相关
+# 稳健性：单年计数稀疏，补算多年累积报告率的空间自相关
 tot_cum <- aggregate(count ~ region, data = contract, sum)
 tot_cum <- tot_cum[match(provs, tot_cum$region), ]
 x_cum <- tot_cum$count / tot$pop * 1e5
@@ -248,10 +274,10 @@ set.seed(SEED + 2L)
 p_cum <- (1 + sum(abs(replicate(999L, moran_I(sample(x_cum)))) >= abs(I_cum))) / 1000L
 saveRDS(list(W = W, tot = tot, I = I_obs, p = p_val, I_cum = I_cum, p_cum = p_cum),
         file.path(cache_dir, "L3_space.rds"))
-mark_stage("L3 epi-space", sprintf("真实 31 省邻接 %dx%d；单年 Moran's I = %.3f (p = %.3f)，2004–2024 累积 I = %.3f (p = %.3f)",
+mark_stage("L3 epi-space", sprintf("邻接 %dx%d；单年 Moran's I = %.3f (p = %.3f)，多年累积 I = %.3f (p = %.3f)",
                                    nrow(W), ncol(W), I_obs, p_val, I_cum, p_cum))
 
-# ---------------- L4 · 健康不平等（真实人均 GDP 作 SES） ----------------
+# ---------------- L4 · 健康不平等（面板 SES） ----------------
 tot$ses <- geo$ses[match(tot$region, geo$region)]
 o <- order(tot$ses)
 p <- tot$pop[o]; y <- tot$count[o]
@@ -268,7 +294,7 @@ top_share <- tot$count[top_i] / sum(tot$count)
 saveRDS(list(CI = CI, cp = cp, cy = cy, ratio = rate_ratio,
              top_region = top_region, top_share = top_share),
         file.path(cache_dir, "L4_ineq.rds"))
-mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 GDP 组率比 %.2f；%s 占全国病例 %.1f%%（率 %.2f/10万）",
+mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 GDP 组率比 %.2f；%s 占全样本病例 %.1f%%（率 %.2f/10万）",
                                   CI, rate_ratio, top_region, 100 * top_share, tot$rate[top_i]))
 
 # ---------------- L5 · 单文件 HTML 报告 ----------------
@@ -362,12 +388,12 @@ stage_cards <- paste(vapply(stage_log, function(s)
 qc_rows <- paste(sprintf('<tr><td>%s</td><td>%d</td><td>%s</td></tr>',
                          esc(qc$检查项), qc$检出, esc(qc$处理)), collapse = "")
 src_rows <- paste(sprintf('<tr><td>%s</td><td>%d</td><td>%s</td><td>只读，不复制入库</td></tr>',
-  esc(c("发病面板 incidence_province_year.csv", "省邻接 prov_adj.graph",
-        "SES 面板 analysis_panel_2012_2024.csv", "月度面板 panel_province_month.csv")),
+  esc(c("发病面板（地区-年）", "邻接图（INLA .graph）",
+        "SES 面板（地区-年）", "月度气候面板（地区-月）")),
   c(nrow(inc), length(readLines(DATA$graph, warn = FALSE)) - 1L, nrow(ses), nrow(mo)),
-  esc(c(sprintf("省-年 %d–%d", min(inc$year), max(inc$year)), "31 省 queen 邻接（已清洗孤岛）",
-        sprintf("省-年 %d–%d", min(ses$year), max(ses$year)),
-        sprintf("省-月 %s", monthly_axis$years)))), collapse = "")
+  esc(c(sprintf("地区-年 %d–%d", min(inc$year), max(inc$year)), "地区邻接（行标准化、无孤岛）",
+        sprintf("地区-年 %d–%d", min(ses$year), max(ses$year)),
+        sprintf("地区-月 %s", monthly_axis$years)))), collapse = "")
 alert_rows <- if (nrow(alerts)) {
   a <- head(alerts, 12L)
   paste(sprintf('<tr><td>%s</td><td>%s</td><td>%s</td><td>%.1f</td><td>%.2f</td><td>%s</td></tr>',
@@ -375,9 +401,9 @@ alert_rows <- if (nrow(alerts)) {
                 a$upper, a$ratio, esc(a$level)), collapse = "")
 } else '<tr><td colspan="6">评估期未检出异常信号</td></tr>'
 metric_rows <- paste0(
-  sprintf('<tr><td>全局 Moran\'s I（%d 年报告率）</td><td>%.3f</td><td>999 次置换检验 p = %.3f；真实省邻接</td></tr>', cur_year, I_obs, p_val),
-  sprintf('<tr><td>多年累积 Moran\'s I</td><td>%.3f</td><td>2004–2024 累积报告率；置换 p = %.3f，单年计数稀疏时更稳健</td></tr>', I_cum, p_cum),
-  sprintf('<tr><td>集中指数 CI</td><td>%.3f</td><td>按人均 GDP 升序、人口加权；负值表示负担偏向低 GDP 省份</td></tr>', CI),
+  sprintf('<tr><td>全局 Moran\'s I（%d 年报告率）</td><td>%.3f</td><td>999 次置换检验 p = %.3f；面板邻接</td></tr>', cur_year, I_obs, p_val),
+  sprintf('<tr><td>多年累积 Moran\'s I</td><td>%.3f</td><td>多年累积报告率；置换 p = %.3f，单年计数稀疏时更稳健</td></tr>', I_cum, p_cum),
+  sprintf('<tr><td>集中指数 CI</td><td>%.3f</td><td>按 SES 升序、人口加权；负值表示负担偏向低 SES 地区</td></tr>', CI),
   sprintf('<tr><td>低/高 GDP 组报告率比</td><td>%.2f</td><td>按 GDP 中位数二分、人口标化；与连续排序的 CI 口径不同</td></tr>', rate_ratio),
   sprintf('<tr><td>%d 年合计 / 历史中位数</td><td>%.0f / %.0f</td><td>%+.1f%%，长期下降</td></tr>',
           cur_year, total_cur, hist_median, change_pct))
@@ -386,70 +412,71 @@ trend_msg <- if (nrow(alerts) == 0L)
   "长期下降使单侧升高预警零命中，监测系统应同时关注「显著低于基线」的结构性变化" else
   sprintf("本期检出 %d 条升高信号，需结合基线口径复核", nrow(alerts))
 findings_html <- sprintf(paste0(
-'<section class="card"><h2>本次实测的三条主要发现</h2>',
-'<p class="note"><b>1. 趋势与单侧预警。</b>%d 年全国合计 %d 例，为历史年中位数 %.0f 例的 %.1f%%（%+.1f%%）；%s。</p>',
+'<section class="card"><h2>本次演示的三条主要发现</h2>',
+'<p class="note"><b>1. 趋势与单侧预警。</b>%d 年样本合计 %d 例，为历史年中位数 %.0f 例的 %.1f%%（%+.1f%%）；%s。</p>',
 '<p class="note"><b>2. 空间自相关检验。</b>%d 年 Moran\'s I = %.3f (p = %.3f)；',
-'改用 2004–2024 累积报告率后 I = %.3f (p = %.3f)；单年计数稀疏时两者可能都不显著。</p>',
-'<p class="note"><b>3. 单一中位数分组对极端值敏感。</b>集中指数 CI = %.3f 提示负担略偏向低 GDP 省份，',
-'但二分组率比 = %.2f 方向相反：%s 一省占全国病例 %.1f%%（率 %.2f/10万），其人均 GDP 恰好略高于中位数，',
-'被划入「高 GDP」组并拉高该组率。连续 SES 排序的集中指数更稳健；省级生态学关联不可作因果解释。</p></section>'),
+'改用多年累积报告率后 I = %.3f (p = %.3f)；单年计数稀疏时两者可能都不显著。</p>',
+'<p class="note"><b>3. 单一中位数分组对极端值敏感。</b>集中指数 CI = %.3f 提示负担略偏向低 SES 地区，',
+'但二分组率比 = %.2f 方向可能相反：%s 一地区占全样本病例 %.1f%%（率 %.2f/10万），',
+'单一中位数切点会把这类高负担地区划入任一组，从而改变二分组率比。连续 SES 排序的集中指数更稳健；生态学关联不可作因果解释。</p></section>'),
  cur_year, total_cur, hist_median, 100 * total_cur / hist_median, change_pct, trend_msg,
  cur_year, I_obs, p_val, I_cum, p_cum,
  CI, rate_ratio, esc(top_region), 100 * top_share, tot$rate[top_i])
 
 warn_html <- if (time_step == "year") {
   paste0('<div class="warn"><b>数据口径声明（务必先读）</b><br>',
-         '本机真实 HFRS 发病数据来自《中国卫生健康统计年鉴》<b>年刊</b>，粒度为「省-年」；',
-         '<code>cases_est</code> 是按年鉴发病率与人口反算的估计发病数（本脚本取整后作为计数结局），',
-         '<b>不是直报个案数</b>。真实的省-月面板 <code>panel_province_month.csv</code>（',
-         monthly_axis$rows, ' 行）只有气温/降水，<b>没有任何月度发病结局</b>，因此本次实测',
-         '按年际基线做异常检测，未做「月度周报」。月度链路已用合成数据验证，',
-         '拿到月度直报 CSV 后运行 <code>Rscript run_hfrs.R --monthly 你的数据.csv</code> 即可切换，',
+         if (is_demo)
+           '本报告全部数值由<b>内置模拟数据生成器</b>产生（固定种子、地区编码 D01–D31），不含任何真实观测记录，仅用于演示端到端链路。'
+         else
+           '本报告使用<b>本机配置的私有面板</b>，数据只读、不入库、不上传；公开仓库不包含该数据。',
+         '面板粒度为「地区-年」；月度气候面板（', monthly_axis$rows,
+         ' 行）只有气候协变量，<b>没有月度发病结局</b>，因此本次按年际基线做异常检测。',
+         '拿到月度发病 CSV 后运行 <code>Rscript run_hfrs.R --monthly 你的数据.csv</code> 即可切换，',
          '上下游契约不变。所有阈值均为演示口径，<b>不可直接作为公共卫生决策依据</b>。</div>')
 } else {
-  paste0('<div class="warn"><b>月度实测模式</b><br>已使用用户提供的月度发病 CSV（',
+  paste0('<div class="warn"><b>月度演示模式</b><br>已使用用户提供的月度发病 CSV（',
          esc(basename(monthly_csv)), '）按 <code>time_step="month"</code> 运行季节性基线带链路。',
          '阈值与口径需按当地报告制度校准，<b>不可直接作为公共卫生决策依据</b>。</div>')
 }
 
 body <- sprintf(paste0(
-'<header><h1>EpiStack v0.1.0 · HFRS 真实数据端到端实测</h1>',
+'<header><h1>EpiStack v0.1.1 · 地区面板端到端演示</h1>',
 '<p>%s ｜ %d 年评估 ｜ 生成时间 %s</p>',
-'<p>L0 → L6 全链路 · 全程本地计算 · 真实数据只读、不入库、不上传</p></header>',
+'<p>L0 → L6 全链路 · 全程本地计算 · 公开版本仅使用模拟数据</p></header>',
 '%s',
 '<div class="kpis">',
-'<div class="kpi"><div class="v">%d</div><div class="l">真实契约记录</div></div>',
-'<div class="kpi"><div class="v">%d</div><div class="l">省级地区</div></div>',
+'<div class="kpi"><div class="v">%d</div><div class="l">契约记录</div></div>',
+'<div class="kpi"><div class="v">%d</div><div class="l">地区数</div></div>',
 '<div class="kpi o"><div class="v">%d</div><div class="l">异常信号</div></div>',
 '<div class="kpi g"><div class="v">%.3f</div><div class="l">集中指数 CI</div></div>',
 '</div>',
 '%s',
 '<section class="card"><h2>流水线执行状态</h2><div class="flow">%s</div>',
-'<p class="note">L0/L1 由 epiCore v%s 正式包提供（%s）；L3 使用真实 31 省邻接，L4 使用真实人均 GDP。</p></section>',
-'<section class="card"><h2>只读数据源清单</h2><table><thead><tr><th>数据源</th><th>行数</th><th>粒度</th><th>处理方式</th></tr></thead><tbody>%s</tbody></table></section>',
+'<p class="note">L0/L1 由 epiCore v%s 正式包提供（%s）；L3 使用面板邻接，L4 使用面板 SES。</p></section>',
+'<section class="card"><h2>数据源清单</h2><table><thead><tr><th>数据源</th><th>行数</th><th>粒度</th><th>处理方式</th></tr></thead><tbody>%s</tbody></table></section>',
 '<section class="card"><h2>L1 · 数据质控</h2><table><thead><tr><th>检查项</th><th>检出</th><th>处理</th></tr></thead><tbody>%s</tbody></table>',
-'<p class="note">真实面板无脏行即视为质控通过；质控逻辑与合成切片完全一致（epi_qc）。</p></section>',
-'<section class="card"><h2>L2 · 全国年度发病趋势与异常检测</h2>%s',
+'<p class="note">面板无脏行即视为质控通过；质控逻辑与合成切片完全一致（epi_qc）。</p></section>',
+'<section class="card"><h2>L2 · 总体年度趋势与异常检测</h2>%s',
 '<p class="note">%s。</p></section>',
 '<section class="card"><h2>L3 / L4 · 空间格局与健康不平等</h2><div class="two"><div>',
-'<h3>%d 年各省报告率（前 15，每 10 万人）</h3>%s</div><div><h3>集中曲线</h3>%s',
-'<p class="note">虚线为完全平等线；实线在上方表示疾病负担更集中于低 GDP 省份。</p></div></div>',
+'<h3>%d 年各地区报告率（前 15，每 10 万人）</h3>%s</div><div><h3>集中曲线</h3>%s',
+'<p class="note">虚线为完全平等线；实线在上方表示疾病负担更集中于低 SES 地区。</p></div></div>',
 '<h3>关键指标</h3><table><thead><tr><th>指标</th><th>数值</th><th>解读</th></tr></thead><tbody>%s</tbody></table></section>',
 '<section class="card"><h2>L2 · %d 年异常清单（前 12 条）</h2><table>',
-'<thead><tr><th>年份</th><th>省份</th><th>发病数</th><th>基线上界</th><th>超出倍数</th><th>级别</th></tr></thead><tbody>%s</tbody></table></section>',
+'<thead><tr><th>年份</th><th>地区</th><th>发病数</th><th>基线上界</th><th>超出倍数</th><th>级别</th></tr></thead><tbody>%s</tbody></table></section>',
 '<section class="card"><h2>月度接入状态与切换方式</h2><p class="note">',
-'真实省-月气候面板已按契约 <code>date / region</code> 对齐：%d 行、%d 地区、%s 年、%d 个自然月周期（epi_period 映射核验）。',
-'%s 因此「省-月」时间轴与地理编码已就绪，缺的只是月度发病结局列。',
+'月度气候面板已按契约 <code>date / region</code> 对齐：%d 行、%d 地区、%s 年、%d 个自然月周期（epi_period 映射核验）。',
+'%s 因此「地区-月」时间轴与地理编码已就绪，缺的只是月度发病结局列。',
 'epi-core 的 <code>read_counts()</code> 支持 <code>time_step = week / month / quarter / year</code>，',
 '拿到月度 CSV（列 date, region, count, population, disease）后无需改动上下游即可完整跑通：</p>',
 '<p class="note"><code>Rscript run_hfrs.R --monthly your_monthly_counts.csv</code></p></section>',
 '<section class="card"><h2>方法与边界</h2><p class="note">',
-'计数结局：年鉴发病率 × 人口反算并取整，仅用于方法链路验证。',
-'空间：真实 31 省 queen 邻接（INLA .graph，海南已人工连广东），行标准化，Moran\'s I + 999 次置换检验。',
-'不平等：按 2024 年人均 GDP 升序、人口加权的集中指数 CI = 1 − 2×集中曲线下面积。',
+'计数结局：面板 cases 字段取整，仅用于方法链路验证。',
+'空间：面板邻接（INLA .graph 格式，行标准化、无孤岛），Moran\'s I + 999 次置换检验。',
+'不平等：按最新年 SES 升序、人口加权的集中指数 CI = 1 − 2×集中曲线下面积。',
 '率比按人均 GDP 中位数二分分组，与连续排序的集中指数口径不同，方向不一致时以集中指数为准。',
-'预警阈值需按病种、报告制度与历史长度校准；本报告为开源工具 v0.1 的实测样例，<b>不构成任何决策依据</b>。</p></section>',
-'<footer>EpiStack v0.1.0 · epiCore %s · 单文件离线报告 · manifest 见 output/ 目录</footer>'),
+'预警阈值需按病种、报告制度与历史长度校准；本报告为开源工具的演示样例，<b>不构成任何决策依据</b>。</p></section>',
+'<footer>EpiStack v0.1.1 · epiCore %s · 单文件离线报告 · manifest 见 output/ 目录</footer>'),
  esc(data_label), cur_year, esc(format(Sys.time(), "%Y-%m-%d %H:%M")),
  warn_html,
  nrow(contract), length(provs), nrow(alerts), CI,
@@ -461,20 +488,20 @@ body <- sprintf(paste0(
  monthly_axis$rows, monthly_axis$regions, esc(monthly_axis$years), monthly_axis$periods,
  esc(monthly_axis$note), EPI_CONTRACT_VERSION)
 
-out_html <- file.path(out_dir, paste0("HFRS真实数据实测报告", suffix, ".html"))
+out_html <- file.path(out_dir, paste0("面板分析报告", suffix, ".html"))
 html <- paste0('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">',
                '<meta name="viewport" content="width=device-width,initial-scale=1">',
-               '<title>EpiStack · HFRS 真实数据端到端实测</title><style>', css,
+               '<title>EpiStack · 地区面板端到端演示</title><style>', css,
                '</style></head><body><div class="wrap">', body, '</div></body></html>')
 con <- file(out_html, open = "wt", encoding = "UTF-8")
 writeLines(enc2utf8(html), con, useBytes = TRUE)
 close(con)
-mark_stage("L5 epi-report", sprintf("单文件实测报告输出：%s（%d 字节）",
+mark_stage("L5 epi-report", sprintf("单文件报告输出：%s（%d 字节）",
                                     basename(out_html), file.info(out_html)$size))
 
 # ---------------- L6 · 可复现 manifest ----------------
 manifest <- sprintf(paste0(
-'{\n  "pipeline": "EpiStack HFRS real-data case v0.1.0",\n',
+'{\n  "pipeline": "EpiStack panel adapter v0.1.1",\n',
 '  "generated_at": "%s",\n  "r_version": "%s",\n  "seed": %d,\n',
 '  "stages": [\n%s\n  ],\n',
 '  "core": {"package": "epiCore", "version": "%s", "load": "%s"},\n',
@@ -486,8 +513,8 @@ manifest <- sprintf(paste0(
 '  "total_current": %d, "historical_median": %.0f, "change_pct": %.1f, "top_region": "%s", "top_share": %.4f},\n',
 '  "monthly_axis": {"rows": %d, "regions": %d, "periods": %d, "note": "%s"},\n',
 '  "outputs": {"report": "%s", "alerts_csv": "%s", "cache": "cache/L0,L2,L3,L4 rds"},\n',
-'  "reproduce": "Rscript run_hfrs.R [--monthly <月度CSV>]",\n',
-'  "privacy": "真实数据只读；output/ 全部产物仅在本地，不入库、不上传"\n}\n'),
+'  "reproduce": "Rscript run_hfrs.R [--local] [--monthly <月度CSV>]",\n',
+'  "privacy": "公开版本默认纯模拟数据；本机私有面板只读、不入库、不上传"\n}\n'),
  format(Sys.time(), "%Y-%m-%d %H:%M:%S"), R.version.string, SEED,
  paste(vapply(stage_log, function(s) sprintf('    {"stage": "%s", "detail": "%s", "elapsed_sec": %.2f}',
                                              s$name, gsub('"', "'", s$detail), s$secs),
@@ -498,11 +525,11 @@ manifest <- sprintf(paste0(
  I_obs, p_val, I_cum, p_cum, CI, rate_ratio,
  as.integer(total_cur), hist_median, change_pct, top_region, top_share,
  monthly_axis$rows, monthly_axis$regions, monthly_axis$periods, monthly_axis$note,
- basename(out_html), paste0("alerts_hfrs", suffix, ".csv"))
+ basename(out_html), paste0("alerts_panel", suffix, ".csv"))
 writeLines(enc2utf8(manifest),
-           file.path(out_dir, paste0("run_manifest_hfrs", suffix, ".json")),
+           file.path(out_dir, paste0("run_manifest_panel", suffix, ".json")),
            useBytes = TRUE)
 mark_stage("L6 epi-flow", sprintf("manifest + 4 个阶段缓存已写入 %s/cache/；总耗时 %.2f 秒",
                                   basename(out_dir),
                                   as.numeric(difftime(Sys.time(), t_start, units = "secs"))))
-cat(sprintf("\nHFRS 真实数据端到端实测完成：%s\n", out_html))
+cat(sprintf("\n地区面板端到端演示完成（%s）：%s\n", data_label, out_html))

@@ -1,6 +1,8 @@
 # EpiStack — End-to-end infectious disease surveillance, spatial and equity analytics
 
-[中文说明](README.md) · Version `v0.1.1` · MIT · R >= 4.2 · zero third-party dependencies
+[中文说明](README.md) · Version `v0.1.1` · [Roadmap](ROADMAP.md) · [Nov 2026 log](docs/monthly/2026-11.md) · MIT · R >= 4.2 · zero third-party dependencies
+
+> **Repository**: [github.com/Rythonme/EpiStack](https://github.com/Rythonme/EpiStack) (public · first published 2026-11-11)
 
 > Turn one read-only surveillance table (`date, region, count, population, disease`)
 > into a **single self-contained HTML report** covering data QC, aberration detection,
@@ -48,11 +50,17 @@ end-to-end chain must still run with base R only, offline.
 ## Quickstart
 
 ```bash
+git clone https://github.com/Rythonme/EpiStack.git
+cd EpiStack
+
 # 1. Full chain (synthetic data) + golden integration smoke test
 Rscript pipeline.R --check
 
 # 2. Just the six-layer vertical slice
 Rscript vertical_slice/run_e2e.R
+
+# 2b. Full chain on the built-in synthetic panel (default, no private data)
+Rscript case_hfrs_real/run_hfrs.R
 
 # 3. Install the formal contract package
 R CMD INSTALL epi-core
@@ -108,14 +116,15 @@ falls back to sourcing `R/` files when installation is unavailable (offline).
 - `R CMD build` + `R CMD check` on the source tarball (R 4.6.0): **0 ERROR, 0 NOTE, 1 WARNING**
   (the WARNING is a portability note about UTF-8 Chinese comments; functionality is unaffected)
 - Synthetic slice: 4159 rows, 56 signals, Moran's I = 0.441 (p = 0.031), CI = −0.067
-- Real HFRS province-year panel (651 rows, 31 provinces, 2004–2024, real adjacency and
-  real GDP): QC 0 drops; 2024 total 5588 cases vs historical median 10643 (−47.5%),
-  hence zero one-sided "increase" alerts; cumulative Moran's I = 0.189 (p = 0.074); CI = −0.078
+- Synthetic panel demo (31 regions, fixed seed 20261110): 651 rows, QC 0 drops,
+  Moran's I = 0.406 (p = 0.003), cumulative I = 0.858 (p = 0.001), CI = −0.113;
+  monthly demo 1116 rows / 372 region-periods / 11 signals
 
-**Data caveat:** the local HFRS incidence source is a *yearbook* (province-year); the
-province-month panel contains only climate covariates. Therefore the default real-data
-run uses annual granularity, and `--monthly <CSV>` switches the same contract to a
-monthly chain once a genuine monthly line-list is available. No derived values are
+**Privacy / data source:** the public repository ships **no real surveillance data**.
+Every example runs on `demo/make_demo_data.R` synthetic data. A private local panel can be
+connected through the git-ignored `case_hfrs_real/data_paths.local.R` or `EPISTACK_HFRS_*`
+environment variables with `--local`; that data and its results are never committed or uploaded.
+`--monthly <CSV>` switches the same contract to a monthly chain; no derived values are
 presented as real monthly observations.
 
 ## CI, reproducibility and privacy
@@ -136,6 +145,12 @@ presented as real monthly observations.
 02/03 `epi-space` → 04 `epi-ineq` → 05 `epi-access` → 06/07 report & dashboard →
 08 `epi-flow` (real `targets`) → 09 GeoAI → 10 **EpiStack 1.0** integration.
 Each month only `R/pipeline_plan.R` changes one `current_impl` line.
+
+Full status table, the monthly update SOP and version/privacy conventions live in
+[ROADMAP.md](ROADMAP.md); each month gets a `docs/monthly/YYYY-MM.md` archive
+(template: [TEMPLATE.md](docs/monthly/TEMPLATE.md)) and a `vX.Y` GitHub Release.
+Published: [v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1),
+[v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1).
 
 ## License
 

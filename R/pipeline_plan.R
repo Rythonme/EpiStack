@@ -12,6 +12,30 @@
 # 届时替换执行器即可，不改本文件描述的层级与产物契约。
 # =============================================================
 
+# 本机私有数据源路径解析：公开仓库不含任何绝对路径。
+# 优先环境变量 EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES，其次读取不入库的
+# case_hfrs_real/data_paths.local.R；未配置时返回不存在的哨兵，
+# 使该阶段在 CI 与他人机器上自动 skipped_missing_data。
+epi_local_requires <- function(root = getwd()) {
+  keys <- c("incidence", "graph", "ses")
+  p <- stats::setNames(rep("", length(keys)), keys)
+  cfg <- file.path(root, "case_hfrs_real", "data_paths.local.R")
+  if (file.exists(cfg)) {
+    e <- new.env(parent = baseenv())
+    try(sys.source(cfg, envir = e), silent = TRUE)
+    if (exists("DATA", envir = e, inherits = FALSE)) {
+      d <- get("DATA", envir = e, inherits = FALSE)
+      for (k in keys) if (k %in% names(d)) p[[k]] <- as.character(d[[k]][1L])
+    }
+  }
+  for (k in keys) {
+    ev <- Sys.getenv(paste0("EPISTACK_HFRS_", toupper(k)), unset = "")
+    if (nzchar(ev)) p[[k]] <- ev
+  }
+  v <- unname(unlist(p))
+  ifelse(nzchar(v), v, "EPISTACK_LOCAL_DATA_NOT_CONFIGURED")
+}
+
 EPI_STACK_PLAN <- list(
   plan_version     = "0.1.0",
   contract_version = "0.1.0",
@@ -47,23 +71,32 @@ EPI_STACK_PLAN <- list(
       report = "端到端演示报告.html"
     ),
     list(
-      id = "hfrs_year", label = "HFRS 真实省-年面板实测（仅本机）",
+      id = "panel_demo", label = "模拟面板端到端演示（CI 安全，公开默认）",
+      script = "case_hfrs_real/run_hfrs.R",
+      layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
+      privacy = "synthetic", requires = character(0),
+      env = list(EPISTACK_HFRS_MODE = "demo"),
+      inputs = c("case_hfrs_real/run_hfrs.R", "demo/make_demo_data.R"),
+      outputs = c("面板分析报告_模拟.html", "run_manifest_panel_模拟.json",
+                  "alerts_panel_模拟.csv", "cache/L0_contract.rds"),
+      report = "面板分析报告_模拟.html"
+    ),
+    list(
+      id = "panel_local", label = "本机私有面板实测（仅本机，数据不入库）",
       script = "case_hfrs_real/run_hfrs.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "real-local",
-      requires = c(
-        "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/incidence_province_year.csv",
-        "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/prov_adj.graph",
-        "F:/00在研项目/02_统计建模/【统计建模】一组/00_原始数据/医疗卫生不平等性/01_面板与字典/analysis_panel_2012_2024.csv"
-      ),
+      requires = epi_local_requires(if (exists("root", inherits = TRUE)) root else getwd()),
+      env = list(EPISTACK_HFRS_MODE = "local"),
       inputs = c("case_hfrs_real/run_hfrs.R"),
-      outputs = c("HFRS真实数据实测报告.html", "run_manifest_hfrs.json",
-                  "alerts_hfrs.csv", "cache/L0_contract.rds"),
-      report = "HFRS真实数据实测报告.html"
+      outputs = c("面板分析报告.html", "run_manifest_panel.json",
+                  "alerts_panel.csv", "cache/L0_contract.rds"),
+      report = "面板分析报告.html"
     )
   ),
   shared_inputs = c(
     "bootstrap_core.R", "R/pipeline_plan.R", "R/epi_json.R",
+    "demo/make_demo_data.R",
     "epi-core/DESCRIPTION", "epi-core/NAMESPACE",
     "epi-core/R/contract.R", "epi-core/R/region.R", "epi-core/R/period.R",
     "epi-core/R/adjacency.R", "epi-core/R/qc.R", "epi-core/R/read_counts.R",
