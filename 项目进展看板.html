@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EpiStack · 项目进展看板</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:#243447;font-family:"Microsoft YaHei","PingFang SC",-apple-system,Segoe UI,sans-serif;line-height:1.55}
+.wrap{max-width:1280px;margin:0 auto;padding:26px 22px 60px}
+header{background:linear-gradient(120deg,#1f4e88,#2c7bc9);color:#fff;border-radius:14px;padding:26px 30px;margin-bottom:18px}
+header h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+header .sub{opacity:.92;font-size:14px;margin:0}
+header .meta{opacity:.8;font-size:12px;margin-top:12px}
+header .meta span{margin-right:22px;display:inline-block}
+.bar{height:10px;background:rgba(255,255,255,.25);border-radius:20px;margin-top:16px;overflow:hidden}
+.bar > i{display:block;height:100%;background:#7fe0a8;border-radius:20px;transition:width .5s}
+.pct{font-size:13px;font-weight:700;margin-top:7px;display:block}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid #e3e9f0;border-radius:12px;padding:14px 18px}
+.kpi .v{font-size:24px;font-weight:700;color:#1f4e88}.kpi .l{font-size:12px;color:#718096}
+.kpi.g .v{color:#2e9e6b}.kpi.b .v{color:#2c7bc9}.kpi.p .v{color:#8e7cc3}
+h2.sec{font-size:16px;margin:26px 0 12px;color:#243447}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+.col{background:#eef2f8;border-radius:12px;padding:12px;min-height:180px}
+.col h3{margin:2px 0 12px;font-size:14px;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.cnt{margin-left:auto;background:#fff;border-radius:20px;padding:1px 9px;font-size:11px;color:#718096}
+.card{background:#fff;border:1px solid #e3e9f0;border-left:3px solid #cfd9e6;border-radius:9px;padding:12px 13px;margin-bottom:10px;box-shadow:0 1px 2px rgba(30,60,100,.04)}
+.card.doing{border-left-color:#2c7bc9}.card.done{border-left-color:#2e9e6b}.card.backlog{border-left-color:#8e7cc3}
+.card .t{font-size:13px;font-weight:700;margin:0 0 6px}
+.card .d{font-size:12px;color:#5a6a7e;margin:0 0 9px}
+.card .f{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:10px;background:#f0f4f9;color:#5a6a7e;border-radius:20px;padding:2px 8px}
+.chip.w{background:#e8f1fc;color:#1f4e88}
+.mile{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.mi{background:#fff;border:1px solid #e3e9f0;border-radius:10px;padding:13px 14px;position:relative}
+.mi .s{width:11px;height:11px;border-radius:50%;background:#cfd9e6;display:inline-block;margin-right:7px}
+.mi.done .s{background:#2e9e6b}.mi.doing .s{background:#2c7bc9}
+.mi .n{font-size:12px;font-weight:600}.mi .dt{font-size:11px;color:#8a97a5;margin-top:4px}
+.log{background:#fff;border:1px solid #e3e9f0;border-radius:10px;padding:14px 18px;font-size:12px;color:#5a6a7e}
+.log div{padding:4px 0}.log b{color:#1f4e88;margin-right:10px}
+footer{font-size:11px;color:#8a97a5;text-align:center;margin-top:26px}
+@media(max-width:900px){.board{grid-template-columns:repeat(2,1fr)}.mile{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.board,.mile{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="pname">—</h1>
+    <p class="sub" id="psub"></p>
+    <div class="meta">
+      <span id="powner"></span><span id="prepo"></span><span id="ptarget"></span><span id="pupdated"></span>
+    </div>
+    <div class="bar"><i id="barfill" style="width:0%"></i></div>
+    <span class="pct" id="pct"></span>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="k-total">0</div><div class="l">本月主线任务</div></div>
+    <div class="kpi g"><div class="v" id="k-done">0</div><div class="l">已完成</div></div>
+    <div class="kpi b"><div class="v" id="k-doing">0</div><div class="l">进行中</div></div>
+    <div class="kpi p"><div class="v" id="k-backlog">0</div><div class="l">后续月份储备</div></div>
+  </div>
+
+  <h2 class="sec">任务看板</h2>
+  <div class="board" id="board"></div>
+
+  <h2 class="sec">四周里程碑</h2>
+  <div class="mile" id="mile"></div>
+
+  <h2 class="sec">更新日志</h2>
+  <div class="log" id="log"></div>
+
+  <footer id="note"></footer>
+</div>
+
+<script src="kanban_data.js"></script>
+<script>
+(function(){
+  var D = window.KANBAN_DATA;
+  if(!D){ document.getElementById('board').innerHTML = '<p style="color:#c0392b">未找到 kanban_data.js，请确认与本文件在同一目录。</p>'; return; }
+  var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var p = D.project;
+  document.getElementById('pname').textContent = p.name;
+  document.getElementById('psub').textContent = p.subtitle;
+  document.getElementById('powner').textContent = '负责人：' + p.owner;
+  document.getElementById('prepo').textContent = '仓库：' + p.repo;
+  document.getElementById('ptarget').textContent = '目标：' + p.target;
+  document.getElementById('pupdated').textContent = '更新：' + p.updated;
+
+  var main = D.tasks.filter(function(t){ return t.status !== 'backlog'; });
+  var done = main.filter(function(t){ return t.status === 'done'; }).length;
+  var doing = main.filter(function(t){ return t.status === 'doing'; }).length;
+  var pct = main.length ? Math.round(done / main.length * 100) : 0;
+  document.getElementById('barfill').style.width = pct + '%';
+  document.getElementById('pct').textContent = '本月主线进度 ' + done + '/' + main.length + '（' + pct + '%）';
+  document.getElementById('k-total').textContent = main.length;
+  document.getElementById('k-done').textContent = done;
+  document.getElementById('k-doing').textContent = doing;
+  document.getElementById('k-backlog').textContent = D.tasks.filter(function(t){ return t.status === 'backlog'; }).length;
+
+  document.getElementById('board').innerHTML = D.columns.map(function(c){
+    var list = D.tasks.filter(function(t){ return t.status === c.id; });
+    var cards = list.map(function(t){
+      return '<div class="card ' + t.status + '">' +
+        '<p class="t">' + esc(t.id) + ' · ' + esc(t.title) + '</p>' +
+        '<p class="d">' + esc(t.desc) + '</p>' +
+        '<div class="f"><span class="chip w">' + esc(t.week) + '</span><span class="chip">' + esc(t.tag) + '</span></div>' +
+        '</div>';
+    }).join('');
+    return '<section class="col"><h3><i class="dot" style="background:' + c.color + '"></i>' + esc(c.title) +
+           '<span class="cnt">' + list.length + '</span></h3>' + (cards || '<p style="font-size:12px;color:#8a97a5">暂无任务</p>') + '</section>';
+  }).join('');
+
+  document.getElementById('mile').innerHTML = D.milestones.map(function(m){
+    return '<div class="mi ' + m.state + '"><div class="n"><i class="s"></i>' + esc(m.name) + '</div><div class="dt">' + esc(m.date) + '</div></div>';
+  }).join('');
+
+  document.getElementById('log').innerHTML = D.changelog.map(function(l){
+    return '<div><b>' + esc(l.date) + '</b>' + esc(l.text) + '</div>';
+  }).join('');
+  document.getElementById('note').textContent = D.note;
+})();
+</script>
+</body>
+</html>

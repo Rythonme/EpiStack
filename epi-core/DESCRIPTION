@@ -1,0 +1,17 @@
+Package: epiCore
+Type: Package
+Title: Unified Data Contract Foundation for Infectious Disease Surveillance Pipelines
+Version: 0.1.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Dependency-free foundation layer (L0) of the EpiStack ecosystem.
+    Defines the versioned surveillance data contract, region code normalization,
+    spatial adjacency weight construction, count ingestion and quality control.
+    All downstream layers (alerting, spatial modelling, inequity measurement,
+    reporting) consume the same long table, so a layer can be replaced without
+    breaking the pipeline.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+NeedsCompilation: no

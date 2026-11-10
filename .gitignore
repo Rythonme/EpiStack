@@ -1,0 +1,17 @@
+# 本地 R 包安装缓存（bootstrap_core.R 自动生成）
+.rlib/
+
+# 真实数据与本地实测产物：不入库、不上传
+case_hfrs_real/output/
+
+# 运行期缓存与中间结果
+**/cache/
+*.rds
+
+# 临时文件
+*.tmp
+*.bak
+.Rproj.user
+.Rhistory
+.RData
+.DS_Store

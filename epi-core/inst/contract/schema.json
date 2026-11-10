@@ -1,0 +1,21 @@
+{
+  "schema_version": "0.1.0",
+  "package": "epiCore",
+  "primary_key": ["date", "region", "disease"],
+  "granularity": ["week", "month", "quarter", "year"],
+  "fields": [
+    {"name": "date",       "type": "Date",      "required": true, "note": "观察期锚点；年数据用该年 1 月 1 日"},
+    {"name": "region",     "type": "character", "required": true, "note": "经 normalize_region() 规范化的地区编码"},
+    {"name": "count",      "type": "numeric",   "required": true, "note": "非负发病/报告计数"},
+    {"name": "population", "type": "numeric",   "required": true, "note": "人口分母，必须为正数"},
+    {"name": "disease",    "type": "character", "required": true, "note": "病种代码，例如 HFRS"}
+  ],
+  "derived": ["year", "period"],
+  "geo_fields": ["region", "population", "ses", "row", "col"],
+  "weights": "行标准化、对称、无孤立节点的 n x n 矩阵，dimnames 为 region 编码",
+  "compatibility": {
+    "pop": "population 的旧别名，保留至 0.2.0，勿在新代码中使用"
+  },
+  "privacy": "原始监测数据只读；仓库内仅放置合成或公开汇总数据",
+  "change_policy": "字段增删或类型变更必须提升主版本号，并同步更新集成冒烟测试的 golden file"
+}
