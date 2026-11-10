@@ -1,0 +1,42 @@
+{
+  "golden_version": "0.1.0",
+  "note": "固定种子 20261110 的六层链路基线；仅当有意改变口径时经人工审阅后更新",
+  "seed": 20261110,
+  "expected": {
+    "seed": 20261110,
+    "core.version": "0.1.0",
+    "inputs.rows": 4161,
+    "inputs.regions": 16,
+    "qc.dropped": 2,
+    "qc.duplicate": 1,
+    "qc.missing": 1,
+    "results.n_records": 4159,
+    "results.n_alerts": 56,
+    "results.moran_I": 0.441,
+    "results.moran_p": 0.031,
+    "results.CI": -0.0673,
+    "results.rate_ratio": 1.2273,
+    "contract.version": "0.1.0",
+    "contract.fields": "date,region,count,population,disease",
+    "probe.n_raw": 15,
+    "probe.n_clean": 13,
+    "probe.dropped": 2,
+    "probe.time_step": "week",
+    "probe.n_periods": 52,
+    "probe.validate": 1,
+    "probe.W_nrow": 2,
+    "probe.W_ncol": 2,
+    "probe.W_rowsum_min": 1,
+    "probe.W_rowsum_max": 1,
+    "probe.region_first": "陕西",
+    "probe.schema_version": "0.1.0"
+  },
+  "tolerance": {
+    "results.moran_I": 0.002,
+    "results.moran_p": 0.002,
+    "results.CI": 0.002,
+    "results.rate_ratio": 0.002,
+    "probe.W_rowsum_min": 0.000000001,
+    "probe.W_rowsum_max": 0.000000001
+  }
+}

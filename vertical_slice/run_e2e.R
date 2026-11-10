@@ -11,14 +11,22 @@
 # =============================================================
 
 # ---- 载入正式 epi-core 包 ----
+# 直接 Rscript 运行时由 --file= 推断项目根目录；
+# 被主仓 pipeline.R / 冒烟测试 source 时，由 EPISTACK_PROJECT_ROOT 注入
+# （同一会话内调用，避免 Windows 中文路径经命令行传给子进程时乱码）。
 a0 <- commandArgs(trailingOnly = FALSE)
 f0 <- sub("^--file=", "", a0[grep("^--file=", a0)])
-root <- if (length(f0)) dirname(dirname(normalizePath(f0[1L]))) else dirname(getwd())
+root <- Sys.getenv("EPISTACK_PROJECT_ROOT", unset = "")
+if (!nzchar(root))
+  root <- if (length(f0)) dirname(dirname(normalizePath(f0[1L]))) else dirname(getwd())
 source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
 
 args     <- commandArgs(trailingOnly = TRUE)
-out_html <- if (length(args) >= 1L) args[1L] else file.path(getwd(), "端到端演示报告.html")
+out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
+out_html <- if (nzchar(out_env)) file.path(out_env, "端到端演示报告.html") else
+            if (length(args) >= 1L && !grepl("^--", args[1L])) args[1L] else
+            file.path(getwd(), "端到端演示报告.html")
 out_dir  <- dirname(out_html)
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 cache_dir <- file.path(out_dir, "cache")

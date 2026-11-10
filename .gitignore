@@ -3,6 +3,8 @@
 
 # 真实数据与本地实测产物：不入库、不上传
 case_hfrs_real/output/
+pipeline_out/
+tests/_smoke_out/
 
 # 运行期缓存与中间结果
 **/cache/

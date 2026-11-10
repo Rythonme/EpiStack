@@ -1,6 +1,9 @@
 # EpiStack — 端到端传染病时空分析与健康不平等体系（v2）
 
-> **当前版本 `v0.1.0`（2026-11-10 已打 tag）**：`epi-core` 正式 R 包 + 六层端到端切片 + HFRS 真实数据实测。
+[English version](README.en.md) · 当前版本 `v0.1.1`
+
+> **当前版本 `v0.1.1`（2026-11-10）**：在 `v0.1`（tag）基础上补齐 **W2 编排与 golden 冒烟测试**、**W3 CI / Pages / renv / 英文文档**。
+> `v0.1` = `epi-core` 正式 R 包 + 六层端到端切片 + HFRS 真实数据实测。
 >
 > **v1 的 EpiBulletin 只是 L5 一层，现升级为完整体系。**
 >
@@ -56,7 +59,8 @@ date · region · count · population · disease        # 长表
 ```
 epistack/                      # 主仓：契约定义、集成测试、编排、文档站、路线图
 ├── inst/contract/             # 契约 schema + 合成示例数据
-├── R/  pipeline.R             # targets 流水线，按层调用卫星仓
+├── R/ pipeline_plan.R         # L0–L6 声明式分层计划（每月改一行）
+├── pipeline.R                 # targets 雏形执行器，按层调用卫星仓
 └── vignettes/case-hfrs.Rmd    # 端到端案例（HFRS）
         │  只通过契约交互
         ├── epi-core      (2026-11)
@@ -71,20 +75,26 @@ epistack/                      # 主仓：契约定义、集成测试、编排�
 
 每月的仓库都能**独立 clone、独立跑通自己的 README 示例**；主仓每月只加一行依赖版本，集成冒烟测试保证链路不断。这样既满足"每月一个项目"，又不牺牲体系完整性。
 
-**v0.1 当前实际目录**：
+**v0.1.1 当前实际目录**：
 
 ```
 2026-11_epibulletin/
 ├── epi-core/                  # 本月卫星仓：正式 R 包（可单独 install + check）
 │   ├── R/ man/ tests/ inst/  # 源码 / 文档 / 40 项单测 / schema.json
 │   └── README.md             # 包级独立说明
+├── pipeline.R                 # 主仓统一编排入口（--list / --check / --all / --force）
+├── R/                         # pipeline_plan.R 分层计划 + epi_json.R 零依赖 JSON
+├── tests/                     # smoke_e2e.R + golden/ 契约基线（37 PASS）
+├── .github/workflows/         # R-CMD-check.yaml + nightly-e2e.yml（含隐私守卫）
 ├── bootstrap_core.R           # 断网可用的包加载引导
 ├── vertical_slice/run_e2e.R   # 合成数据六层全通（L0/L1 走 epiCore）
 ├── case_hfrs_real/run_hfrs.R  # HFRS 真实数据实测（--monthly 可切粒度）
 │   └── output/                # 本地产物，已排除入库
 ├── prototype/                 # v1 的 L5 周报原型（保留可用）
+├── pipeline_out/              # 编排产物 + 静态报告站，已排除入库
 ├── 项目进展看板.html + kanban_data.js
-├── CHANGELOG.md / LICENSE / README.md / .gitignore
+├── renv.lock / CHANGELOG.md / LICENSE / .gitignore
+└── README.md（中文） + README.en.md（英文）
 ```
 
 ---
@@ -175,6 +185,52 @@ cd "/f/00在研项目/05_Github/2026-11_epibulletin/case_hfrs_real"
 
 ---
 
+## 5.2 W2/W3 · 主仓编排、golden 冒烟测试与 CI
+
+**一条命令跑全部交付**（默认只跑合成数据，CI 上不需要、也读不到任何真实监测数据）：
+
+```bash
+cd "/f/00在研项目/05_Github/2026-11_epibulletin"
+"/d/R/bin/x64/Rscript.exe" pipeline.R --list              # 打印 L0–L6 分层计划
+"/d/R/bin/x64/Rscript.exe" pipeline.R --check             # 跑链路 + golden 集成冒烟测试
+"/d/R/bin/x64/Rscript.exe" pipeline.R --all --check       # 额外跑本机 HFRS 真实链路
+"/d/R/bin/x64/Rscript.exe" pipeline.R --force             # 忽略指纹缓存强制重跑
+```
+
+**W2 · targets 雏形**：`R/pipeline_plan.R` 是主仓唯一"每月改一行"的地方——把某层的
+`current_impl` 从 `thin` 改成 `formal`、`impl` 指向当月卫星仓即可，上下游契约不变。
+`pipeline.R` 用 **输入指纹（脚本 + 包源码的 md5）** 实现 targets 的
+skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改动 → 该阶段自动重跑、
+未改动阶段保持 cached」。统一产出 `pipeline_out/pipeline_manifest.json`（7 层状态、
+每阶段耗时、契约版本、冒烟结果、隐私声明）与 `pipeline_out/site/`（合成报告 + 看板导航页）。
+2027-08 的 `epi-flow` 只需替换执行器，不改计划文件描述的层级与产物契约。
+
+**W2 · 契约 golden-file**：`tests/golden/vertical_slice_v0.1.0.json` 固化固定种子下的
+27 项指标；`tests/smoke_e2e.R` 重跑六层链路并做 10 项结构断言（L0–L5 阶段齐全、
+4 个阶段缓存、HTML 完整性、**注入的 6 周暴发必须全部命中最高级告警**、契约探针的
+字段/质控/权重行和等）。合计 **37 PASS / 0 FAIL**，失败即非零退出。
+有意改变口径时用 `Rscript tests/smoke_e2e.R --update` 重生成基线，但必须人工审阅 diff。
+
+**W3 · 工程化**：
+
+| 文件 | 作用 |
+|---|---|
+| `.github/workflows/R-CMD-check.yaml` | push/PR：`R CMD build` + `check`（**0 ERROR 门禁**）+ `pipeline.R --check`，上传日志与合成报告站 |
+| `.github/workflows/nightly-e2e.yml` | 每晚（北京 02:00）重跑链路 → **隐私守卫**（站点里出现 `*HFRS*` / `*真实*` / `*.rds` 即失败）→ GitHub Pages 发布 |
+| `renv.lock` | 零第三方依赖基线快照（R 4.6.0 + CRAN）；将来引入依赖时用 `renv::snapshot()` 覆盖 |
+| `README.en.md` | 英文版说明（架构、Quickstart、包 API、验证、CI、隐私、路线图） |
+| `R/epi_json.R` | base R 极简 JSON 读写，保证 L6 manifest / golden / pipeline 状态在断网环境可解析，不引入 jsonlite |
+
+> Pages 首次使用需在仓库 Settings → Pages 把 Source 设为 **GitHub Actions**。
+> 站点只发布**合成数据报告 + 项目看板**；HFRS 真实数据及其分析报告留在本机 `pipeline_out/hfrs_year/`，
+> 已被 `.gitignore` 排除，不入库、不上传、不发布。
+
+**本机实测（2026-11-10，R 4.6.0）**：`pipeline.R --check` → 1 阶段 cached + 37 PASS；
+`--all --check` → `vertical_slice:cached, hfrs_year:ran`（真实链路 4/4 产物齐全）；
+`pipeline_manifest.json` 已用 JSON 解析器交叉校验；`pipeline_out/site/` 4 个文件（index / report / kanban.html / kanban_data.js）。
+
+---
+
 ## 6. 十二个月路线图（每月一个可发布仓库）
 
 | 月份 | 卫星仓 | 加厚层 | 当月可独立交付的东西 |
@@ -202,10 +258,10 @@ cd "/f/00在研项目/05_Github/2026-11_epibulletin/case_hfrs_real"
 |---|---|---|
 | 语言边界 | **R 为主**；Python 只在栅格/GeoAI 侧，落盘 CSV/GeoTIFF 交换 | 你的主力是 R 4.6.0；避免 `reticulate` 把整条链拖进双环境依赖 |
 | 重依赖处理 | INLA / Stan / GeoAI 一律放 `Suggests`，装不上也能跑 L0–L2、L5、L6 | **保证"断网、只装 base R 也能端到端跑通"**，这是体系不烂尾的底线 |
-| 编排 | v0.1 用阶段 rds 缓存 + manifest；2027-08 换 `targets` | 先让链路存在，再谈工程化 |
-| 依赖锁定 | `renv` + GitHub Actions `R-CMD-check` | 可复现，别人 clone 就能跑 |
-| 测试 | 每层 golden-file 单测 + **端到端冒烟测试**（注入暴发必须命中） | 链路断了当天就能发现 |
-| 隐私 | 原始面板只读；仓库只放合成数据；报告可 `show_counts=FALSE` | 符合原始数据保护规则，真实监测数据不上传 |
+| 编排 | v0.1.1：`pipeline.R` 声明式分层计划 + md5 指纹缓存 + 统一 manifest（targets 雏形）；2027-08 换真 `targets` | 先让链路存在、再让链路可缓存，最后才谈完整工程化 |
+| 依赖锁定 | 零第三方 `renv.lock` + GitHub Actions `R-CMD-check` + 每晚 e2e | 别人 clone 一条 `Rscript pipeline.R --check` 就能跑 |
+| 测试 | 40 项包单测 + **契约 golden-file**（27 指标）+ 端到端冒烟（10 结构断言，注入暴发必须命中）= 37 PASS | 链路断了当晚定时任务就会红 |
+| 隐私 | 原始面板只读；仓库只放合成数据；CI 不跑 `--all`；Pages 发布前有隐私守卫 | 符合原始数据保护规则，真实监测数据不上传、不发布 |
 | 报告 | 手写内联 SVG，不用 pandoc / rmarkdown / Shiny | 输出单文件 HTML，收件方零安装 |
 
 ---
@@ -213,6 +269,7 @@ cd "/f/00在研项目/05_Github/2026-11_epibulletin/case_hfrs_real"
 ## 8. 体系级验收标准（v0.1 / 1.0）
 
 - **v0.1（2026-11-10 已达成，tag `v0.1`）**：`Rscript run_e2e.R` 一条命令，从只读原始面板到含六层结果的综合 HTML 报告 + manifest；换 L0/L1 为 `epiCore` 正式包后数值逐位不变；注入暴发 6 周全中；`R CMD INSTALL` + `library(epiCore)` 可用，40 项单测通过，`R CMD check` 0 ERROR；HFRS 真实面板（651 行 / 31 省 / 2004–2024）本地端到端实测完成，真实数据不入库。✅
+- **v0.1.1（2026-11-10 已达成）**：`Rscript pipeline.R --check` 一条命令跑通编排 + golden 冒烟（37 PASS / 0 FAIL）；指纹缓存与改动触发重跑已验证；`--all` 下真实链路 4/4 产物齐全；统一 `pipeline_manifest.json` + 静态报告站；GitHub Actions 两个工作流、零依赖 `renv.lock`、中英文 README 齐备。✅
 - **1.0（2027-10）**：`targets::tar_make()` 一键复现 HFRS 完整案例；任一卫星仓可单独 `install_github()` 并跑通自身 README 示例；`R CMD check` 全绿；中文文档站 + 英文 README。
 
 ---
@@ -226,20 +283,23 @@ cd "/f/00在研项目/05_Github/2026-11_epibulletin/case_hfrs_real"
 | 换一层导致上下游崩 | 契约 schema 有版本与 golden-file 测试；集成冒烟测试每晚跑 |
 | 被质疑"和现成包重复" | L2–L4 明确写成适配器并致谢，README 首屏给竞品差异表 |
 | 算法口径被同行挑刺 | 阈值可配置、报告强制免责声明、文档标注方法学出处 |
-| 中文/编码在他人机器乱码 | 全链路 UTF-8、HTML 内嵌 charset、CI 覆盖 Windows/macOS/Linux |
+| 中文/编码在他人机器乱码 | 全链路 UTF-8、HTML 内嵌 charset、CI（Ubuntu）覆盖 UTF-8 路径；Windows 本机 R 4.6.0 已实测；`R CMD check` 需在无 `LC_ALL/LANG` 干扰的环境执行（见 CHANGELOG 踩坑记录） |
 
 ---
 
-## 10. 本月剩余动作（四周）
+## 10. 本月四周排期（四周全部完成，均提前）
 
 | 周 | 交付 |
 |---|---|
 | W1（11/11–11/17） | ✅ **提前完成**：`epi-core` 正式包（schema / 地区编码 / 邻接权重 / `read_counts()`）、40 项单测、Rd 文档、R CMD check；切片 L0/L1 已替换为包调用且回归一致 |
-| W2（11/18–11/24） | 集成冒烟测试 + 契约 golden-file 版本化；`run_e2e.R` 改为主仓 `pipeline.R` 的 targets 雏形 |
-| W3（11/25–12/01） | GitHub Actions：R-CMD-check + 每晚跑 e2e + gh-pages 报告；`renv.lock` |
+| W2（11/18–11/24） | ✅ **提前完成**：`pipeline.R` 声明式编排 + md5 指纹缓存 + 统一 manifest；契约 golden-file（27 指标）与集成冒烟（10 项结构断言）= 37 PASS / 0 FAIL；`R/epi_json.R` 零依赖 JSON 读写 |
+| W3（11/25–12/01） | ✅ **提前完成**：`R-CMD-check.yaml`（build + check 0 ERROR 门禁 + 冒烟）、`nightly-e2e.yml`（每晚 e2e + 隐私守卫 + Pages）、零依赖 `renv.lock`、`README.en.md` 英文说明 |
 | W4（12/02–12/08） | ✅ **提前完成**：HFRS 真实数据本地实测（省-年面板 + 真实邻接 + 真实 SES）、`--monthly` 月度切换接口、CHANGELOG、MIT、中英文说明、`v0.1` tag。**口径修正**：本机无真实月度发病序列，月度链路仅完成合成数据接口冒烟，待月度直报数据接入后补实测 |
 
-> W1 与 W4 提前完成，W2/W3 的工程化（CI / renv / targets 雏形）仍是本月剩余工作。
+> 四周工作已在 11/10 当天全部落地（`v0.1` 与 `v0.1.1` 两个 tag）。
+> **下一步（12 月，卫星仓 `epi-ingest`）**：把 L1 的 `epi_qc()` 扩成多源读取器 + 质控报告 +
+> 栅格协变量 zonal stats，仍按「可独立安装、可 `R CMD check`」的标准发布；主仓只需把
+> `R/pipeline_plan.R` 里 L1 的 `current_impl` 改成 `formal`。
 
 ---
 

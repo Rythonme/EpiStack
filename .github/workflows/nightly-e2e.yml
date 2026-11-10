@@ -1,0 +1,57 @@
+name: Nightly E2E + Pages
+
+# 每晚（UTC 18:00 / 北京 02:00）重跑合成数据端到端链路，
+# 并把「仅合成数据」的示例报告与项目看板发布到 GitHub Pages。
+# 首次使用需在仓库 Settings → Pages 里把 Source 设为 GitHub Actions。
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Run pipeline + golden smoke test
+        # 故意不加 --all：真实 HFRS 面板只在本机，CI 上不存在也不需要。
+        run: Rscript pipeline.R --check
+
+      - name: Privacy guard
+        # 站点里不允许出现任何真实数据产物；写死保险，防止后续误改 build_site()。
+        run: |
+          BAD=$(find pipeline_out/site -type f \( -iname '*HFRS*' -o -iname '*真实*' -o -iname '*.rds' \) -print)
+          if [ -n "$BAD" ]; then
+            echo "::error::站点目录出现真实数据产物：$BAD"
+            exit 1
+          fi
+          echo "站点仅含合成数据报告与看板："
+          find pipeline_out/site -type f -printf '%f\n' | sort
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pipeline_out/site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -23,7 +23,9 @@ suffix <- if (!is.null(monthly_csv)) "_月度" else ""
 a0 <- commandArgs(trailingOnly = FALSE)
 f0 <- sub("^--file=", "", a0[grep("^--file=", a0)])
 here <- if (length(f0)) dirname(normalizePath(f0[1L])) else getwd()
-root <- dirname(here)
+# 被主仓 pipeline.R source 时由环境变量注入；直接 Rscript 运行时按脚本位置推断
+root <- Sys.getenv("EPISTACK_PROJECT_ROOT", unset = "")
+if (!nzchar(root)) root <- dirname(here)
 source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
 
@@ -34,7 +36,8 @@ DATA <- list(
   ses       = "F:/00在研项目/02_统计建模/【统计建模】一组/00_原始数据/医疗卫生不平等性/01_面板与字典/analysis_panel_2012_2024.csv",
   monthly   = "F:/00在研项目/03_HFRS地理谱系/data/t14/clean/panel_province_month.csv"
 )
-out_dir  <- file.path(here, "output")
+out_env <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
+out_dir <- if (nzchar(out_env)) out_env else file.path(here, "output")
 cache_dir <- file.path(out_dir, "cache")
 dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -499,6 +502,7 @@ manifest <- sprintf(paste0(
 writeLines(enc2utf8(manifest),
            file.path(out_dir, paste0("run_manifest_hfrs", suffix, ".json")),
            useBytes = TRUE)
-mark_stage("L6 epi-flow", sprintf("manifest + 4 个阶段缓存已写入 output/cache/；总耗时 %.2f 秒",
+mark_stage("L6 epi-flow", sprintf("manifest + 4 个阶段缓存已写入 %s/cache/；总耗时 %.2f 秒",
+                                  basename(out_dir),
                                   as.numeric(difftime(Sys.time(), t_start, units = "secs"))))
 cat(sprintf("\nHFRS 真实数据端到端实测完成：%s\n", out_html))
