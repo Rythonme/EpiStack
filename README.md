@@ -1,6 +1,6 @@
 # EpiStack — 端到端传染病时空分析与健康不平等体系（v2）
 
-[English version](README.en.md) · 当前版本 `v0.1.1` · [路线图与逐月更新](ROADMAP.md) · [本月任务归档](docs/monthly/2026-11.md)
+[English version](README.en.md) · 当前版本 `v0.1.1` · [路线图与逐月更新](ROADMAP.md) 
 
 [![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -329,40 +329,6 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 ---
 
-## 10. 本月四周排期（四周全部完成，均提前）
-
-| 周 | 交付 |
-|---|---|
-| W1（11/11–11/17） | ✅ **提前完成**：`epi-core` 正式包（schema / 地区编码 / 邻接权重 / `read_counts()`）、40 项单测、Rd 文档、R CMD check；切片 L0/L1 已替换为包调用且回归一致 |
-| W2（11/18–11/24） | ✅ **提前完成**：`pipeline.R` 声明式编排 + md5 指纹缓存 + 统一 manifest；契约 golden-file（27 指标）与集成冒烟（10 项结构断言）= 37 PASS / 0 FAIL；`R/epi_json.R` 零依赖 JSON 读写 |
-| W3（11/25–12/01） | ✅ **提前完成**：`R-CMD-check.yaml`（build + check 0 ERROR 门禁 + 冒烟）、`nightly-e2e.yml`（每晚 e2e + 隐私守卫 + Pages）、零依赖 `renv.lock`、`README.en.md` 英文说明 |
-| W4（12/02–12/08） | ✅ **提前完成**：HFRS 真实数据本地实测（省-年面板 + 真实邻接 + 真实 SES）、`--monthly` 月度切换接口、CHANGELOG、MIT、中英文说明、`v0.1` tag。**口径修正**：本机无真实月度发病序列，月度链路仅完成合成数据接口冒烟，待月度直报数据接入后补实测 |
-
-> 四周工作已在 11/10 当天全部落地（`v0.1` 与 `v0.1.1` 两个 tag）。
-> **下一步（12 月，卫星仓 `epi-ingest`）**：把 L1 的 `epi_qc()` 扩成多源读取器 + 质控报告 +
-> 栅格协变量 zonal stats，仍按「可独立安装、可 `R CMD check`」的标准发布；主仓只需把
-> `R/pipeline_plan.R` 里 L1 的 `current_impl` 改成 `formal`。
-
----
-
-## 11. 发布与逐月更新
-
-本仓库采用「**一次发布总体 + 按月增量更新**」：先把体系设计、数据契约、可运行链路与本月任务一次性公开，之后每月只更新对应卫星仓与文档，主仓结构保持稳定。
-
-| 内容 | 文件 | 更新频率 |
-|---|---|---|
-| 体系总体（架构 / 契约 / HFRS 用例 / 验收 / 竞品） | [README.md](README.md) · [README.en.md](README.en.md) | 架构变更时 |
-| 12 个月状态表 + 逐月更新 SOP + 版本/隐私约定 | [ROADMAP.md](ROADMAP.md) | **每月** |
-| 当月任务、验收、实测、踩坑、下月交接 | [docs/monthly/2026-11.md](docs/monthly/2026-11.md)（模板 [TEMPLATE.md](docs/monthly/TEMPLATE.md)） | **每月新建一份** |
-| 版本变更明细 | [CHANGELOG.md](CHANGELOG.md) | 每次发版 |
-| 任务状态看板 | [项目进展看板.html](项目进展看板.html) + `kanban_data.js` | 状态变化时只改数据文件 |
-| 正式 R 包 | `epi-core/` | 卫星仓发版时 |
-
-**月度固定动作**：新建归档 → 发布卫星仓 → 主仓 `current_impl` 改一行 → `pipeline.R --all --check` + golden 冒烟 → 同步四处状态 → 打 `vX.Y` tag + 创建月度 Release。详见 [ROADMAP.md 第 4 节](ROADMAP.md)。
-
-**已发布**：[v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1)（立项）· [v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1)（W2/W3 工程化收尾，本月正式版本）。
-**下月**：2026-12 · `epi-ingest` · `v0.2`。
-**报告站**：[rythonme.github.io/EpiStack](https://rythonme.github.io/EpiStack/)（仅合成数据，每晚自动更新）。
 
 > 公开仓库**不含任何真实监测数据**：所有示例与 CI 默认使用 `demo/make_demo_data.R` 生成的模拟面板；本机私有面板只通过不入库的配置接入，数据与结果不公开；站点发布带隐私守卫。
 
