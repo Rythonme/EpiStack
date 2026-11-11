@@ -6,7 +6,7 @@ window.KANBAN_DATA = {
     name: "EpiStack",
     subtitle: "端到端传染病时空分析与健康不平等体系 · 2026-11 立项",
     repo: "github.com/Rythonme/EpiStack（公开 · MIT · 2026-11-11 发布）+ 卫星仓 epi-core/",
-    updated: "2026-11-11 00:35",
+    updated: "2026-11-11 08:15",
     owner: "本人",
     target: "已公开发布，按 ROADMAP.md 逐月更新 ｜ 12 月 epi-ingest · v0.2 ｜ EpiStack 1.0 · 2027-10"
   },
@@ -52,7 +52,8 @@ window.KANBAN_DATA = {
     { date: "2026-11-10 21:30", text: "升级 v2：L0–L6 体系架构 + 主仓/卫星仓拓扑 + 12 个月路线图；run_e2e.R 六层全通（R 4.6.0，1.3 秒，Moran p=0.031，CI=-0.067）。" },
     { date: "2026-11-10 22:05", text: "W1+W4 提前完成：epi-core 正式 R 包（40 项单测 / R CMD check 0 ERROR）；切片 L0/L1 换成包调用且数值逐位一致；本机私有面板端到端验收（数据与结果不公开）；--monthly 月度接口冒烟通过；v0.1 tag 已打。" },
     { date: "2026-11-10 23:45", text: "W2+W3 提前完成：pipeline.R 分层编排（md5 指纹缓存 / 统一 manifest / 静态报告站）；tests/golden 契约基线 + 冒烟 37 PASS / 0 FAIL；R-CMD-check 与 nightly-e2e+Pages 两个工作流（含隐私守卫）；零依赖 renv.lock、英文 README、R/epi_json.R 零依赖 JSON 读写。四周任务全部完成，v0.1.1 待发。" },
-    { date: "2026-11-11 00:20", text: "首次公开发布到 github.com/Rythonme/EpiStack（公开 / MIT）；新增 ROADMAP.md（12 个月状态表 + 逐月更新 SOP + 版本/隐私约定）、docs/monthly/2026-11.md 本月任务归档与 TEMPLATE.md；发布前做隐私加固：移除公开仓库所有本机路径、真实数据文件名与真实汇总数值，新增 demo/make_demo_data.R 内置模拟数据生成器，面板适配器默认走模拟数据、--local 才读本机私有配置；中英文 README 补仓库地址、CI 徽章与 clone 快速开始；同步 v0.1 / v0.1.1 GitHub Release；R-CMD-check 首次远端运行通过，Pages 已启用（仅合成数据站点）。" }
+    { date: "2026-11-11 00:20", text: "首次公开发布到 github.com/Rythonme/EpiStack（公开 / MIT）；新增 ROADMAP.md（12 个月状态表 + 逐月更新 SOP + 版本/隐私约定）、docs/monthly/2026-11.md 本月任务归档与 TEMPLATE.md；发布前做隐私加固：移除公开仓库所有本机路径、真实数据文件名与真实汇总数值，新增 demo/make_demo_data.R 内置模拟数据生成器，面板适配器默认走模拟数据、--local 才读本机私有配置；中英文 README 补仓库地址、CI 徽章与 clone 快速开始；同步 v0.1 / v0.1.1 GitHub Release；R-CMD-check 首次远端运行通过，Pages 已启用（仅合成数据站点）。" },
+    { date: "2026-11-11 08:15", text: "补充分发通道：v0.1.1 Release 追加 epiCore_0.1.0.tar.gz 资产，其他人可一行 install.packages(URL) 联网安装（零第三方依赖、版本固定）；中英文 README / 包 README 补全联网、本地、离线三种安装方式并去掉本机 R 绝对路径；R 4.6.0 / Windows 实测 URL 安装与 pak 通过、remotes 需 TAR=internal 规避中文文件名转码问题；Release notes 与 CHANGELOG 同步；不新增 tag、不改算法。" }
   ],
   note: "本看板只读 kanban_data.js。任务状态变化后改本文件并刷新页面即可，不必改 HTML。数据分析仍在本地执行，原始数据不上传。"
 };

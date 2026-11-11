@@ -29,6 +29,23 @@ Rscript pipeline.R --list         # 只看 L0–L6 分层计划
 断网也能跑：不需要安装任何第三方 R 包，`bootstrap_core.R` 会自动从源码加载 `epi-core`。
 单独跑某条链路：`Rscript vertical_slice/run_e2e.R`（合成数据）或 `Rscript case_hfrs_real/run_hfrs.R`（真实数据仅在本机）。
 
+### 只想单独用 `epiCore` 这个包？联网一行安装（不用 clone 整个仓库）
+
+```r
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+library(epiCore)
+```
+
+这就是本地 `install.packages("path/to/epi-core", ...)` 的联网版：路径换成 Release 资产 URL 即可，
+零第三方依赖、纯 R 无需编译工具、版本固定可复现。装开发版可用
+`remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")`，
+Windows 上需先 `Sys.setenv(TAR = "internal")`（仓库含中文文件名，外部 `tar.exe` 会报转码错误）；
+`pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")` 亦可。
+详见 [epi-core/README.md 安装章节](epi-core/README.md#安装)。
+
 ---
 
 ## 1. 为什么是"体系"，而不是"更大的一个工具"

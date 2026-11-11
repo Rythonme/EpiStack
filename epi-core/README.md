@@ -23,15 +23,44 @@ date · region · count · population · disease     # 长表（主键 date+regi
 
 ## 安装
 
+### 联网安装（推荐：一行、零第三方依赖）
+
+`epi-core` 是主仓中的子目录包，已随 Release 附带构建好的源码 tarball。
+本地写法 `install.packages("path/to/epi-core", repos = NULL, type = "source")`
+只要把路径换成 URL 就是联网版：
+
 ```r
-install.packages("path/to/epi-core", repos = NULL, type = "source")
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
 library(epiCore)
 ```
 
-或在本仓库根目录直接安装到项目内 `.rlib/`：
+纯 base R、无编译代码，Windows 不需要 Rtools；URL 里的 `v0.1.1` 固定了版本，便于复现。
+该命令已在 R 4.6.0 / Windows 上从公网实测通过（0.1.0，16 个导出函数，契约版本 0.1.0）。
+
+想跟开发分支、指定 tag 或提交，用 `remotes` / `pak`：
+
+```r
+remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")
+
+# pak（实测通过，自带解压器）
+pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")
+```
+
+> **Windows 注意**：仓库内存在中文命名的示例文件，`remotes` 默认调用的外部 `tar.exe`
+> 在中文 locale 下会报 `input string ... is invalid`。先执行
+> `Sys.setenv(TAR = "internal")` 再装即可（会有 pax header 警告，不影响安装）；
+> 或者直接用上面的 URL 一行安装 / `pak`，完全绕开这个问题。
+
+### 本地 / 离线
 
 ```bash
-"/d/R/bin/x64/Rscript.exe" -e 'install.packages("epi-core", repos=NULL, type="source", lib=".rlib")'
+git clone https://github.com/Rythonme/EpiStack.git
+R CMD INSTALL EpiStack/epi-core
+# 或在本仓库根目录装到项目内 .rlib/：
+# Rscript -e 'install.packages("epi-core", repos=NULL, type="source", lib=".rlib")'
 ```
 
 断网 / 无构建工具时，`../bootstrap_core.R` 会按依赖顺序 `source()` `R/` 下的源码，
@@ -97,7 +126,7 @@ read_counts(x, time_step = "auto")     # 按日期间隔自动推断
 ## 测试
 
 ```bash
-"/d/R/bin/x64/Rscript.exe" tests/test_epi_core.R
+Rscript tests/test_epi_core.R
 ```
 
 40 项 base R 断言，覆盖 schema 校验、地区编码、周期映射、格网与 INLA 邻接、

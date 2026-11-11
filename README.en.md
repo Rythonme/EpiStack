@@ -62,13 +62,22 @@ Rscript vertical_slice/run_e2e.R
 # 2b. Full chain on the built-in synthetic panel (default, no private data)
 Rscript case_hfrs_real/run_hfrs.R
 
-# 3. Install the formal contract package
+# 3. Install the formal contract package (local source)
 R CMD INSTALL epi-core
 Rscript -e 'library(epiCore); print(epi_schema()$version)'
+
+# 3b. Or install epiCore over the network, no clone and no extra packages:
+Rscript -e 'install.packages("https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz", repos=NULL, type="source"); library(epiCore); print(epi_schema()$version)'
 
 # 4. Inspect the monthly plan
 Rscript pipeline.R --list
 ```
+
+For the development version, `remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")`
+is the standard syntax (verified on Windows only after the workaround below). On Windows, run `Sys.setenv(TAR = "internal")` first: the
+repository contains a few Chinese-named example files that the external `tar.exe` cannot decode
+under a non-UTF-8 locale (`input string ... is invalid`). `pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")`
+and the Release-URL one-liner above avoid this entirely. All three paths were verified on R 4.6.0 / Windows.
 
 `pipeline.R` options: `--all` (also run the local real-data HFRS chain when its
 read-only files exist), `--force` (ignore the fingerprint cache), `--check`

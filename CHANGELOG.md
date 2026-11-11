@@ -2,6 +2,25 @@
 
 本项目所有版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [安装分发] — 2026-11-11（补充分发通道，不另发 tag、不改算法）
+
+### 新增
+
+- `v0.1.1` Release 追加资产 **`epiCore_0.1.0.tar.gz`**（`R CMD build` 产出，20 KB，仅含代码与合成示例数据）：其他人可用一行 `install.packages("<Release URL>", repos = NULL, type = "source")` 联网安装，无需 clone 仓库、无需第三方包、无需 Rtools，版本固定可复现
+- 中英文 README 与 `epi-core/README.md` 补全「联网安装 / 本地安装 / 离线回退」三种方式，去掉文档里的本机 R 绝对路径；`ROADMAP.md` 中「卫星仓可 `install_github()`」的目标提前具备可复制的安装命令
+
+### 实测（R 4.6.0 / Windows）
+
+| 方式 | 结果 |
+|---|---|
+| Release URL 一行 `install.packages()` | ✅ 0.1.0 / 16 导出函数 / 契约 0.1.0 |
+| `pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")` | ✅ 同上 |
+| `remotes::install_github(..., subdir = "epi-core")` | ⚠️ 默认报 `input string ... is invalid`；先 `Sys.setenv(TAR = "internal")` 后 ✅ |
+
+失败原因：仓库内存在中文命名的示例文件，Windows 中文 locale 下 `remotes` 调用的外部 `tar.exe` 无法转码 UTF-8 文件名；`pak` 自解压与 Release tarball（内部文件名全 ASCII）不受影响。后续版本将考虑把入库文件名统一为 ASCII。
+
+---
+
 ## [文档与发布增量] — 2026-11-11（随 `v0.1.1` 一并发布，不另发 tag）
 
 首次发布到 GitHub 主仓 [Rythonme/EpiStack](https://github.com/Rythonme/EpiStack)（公开 · MIT）。
