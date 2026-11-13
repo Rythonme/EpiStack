@@ -32,6 +32,11 @@ jobs:
       - name: R CMD check (0 ERROR 为准)
         # --ignore-warnings：唯一已知 WARNING 是 R 源码 UTF-8 中文注释的
         # 可移植性提示（功能不受影响）；ERROR 一律判失败。
+        # _R_CHECK_FORCE_SUGGESTS_=false：Excel / DB / 栅格 / 哈希按设计都是
+        # Suggests（核心必须只靠 base R 就能跑），CI 不装它们，正好验证降级路径；
+        # 缺包在运行时由 epi_ingest_capabilities() 明确报告，不会静默失败。
+        env:
+          _R_CHECK_FORCE_SUGGESTS_: "false"
         run: |
           R CMD check --no-manual --no-build-vignettes --ignore-warnings epiCore_*.tar.gz
           R CMD check --no-manual --no-build-vignettes --ignore-warnings epiIngest_*.tar.gz
