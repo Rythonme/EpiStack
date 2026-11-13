@@ -25,20 +25,27 @@ jobs:
           use-public-rspm: true
 
       - name: Build source tarball
-        run: R CMD build epi-core
+        run: |
+          R CMD build epi-core
+          R CMD build epi-ingest
 
       - name: R CMD check (0 ERROR 为准)
         # --ignore-warnings：唯一已知 WARNING 是 R 源码 UTF-8 中文注释的
         # 可移植性提示（功能不受影响）；ERROR 一律判失败。
         run: |
           R CMD check --no-manual --no-build-vignettes --ignore-warnings epiCore_*.tar.gz
-          LOG=$(ls -d *.Rcheck/00check.log | head -1)
-          echo "=== check log tail ==="
-          tail -n 20 "$LOG"
-          if grep -qE '^Status: .*ERROR' "$LOG"; then
-            echo "::error::R CMD check 出现 ERROR"
-            exit 1
-          fi
+          R CMD check --no-manual --no-build-vignettes --ignore-warnings epiIngest_*.tar.gz
+          for LOG in *.Rcheck/00check.log; do
+            echo "=== $LOG ==="
+            tail -n 20 "$LOG"
+            if grep -qE '^Status: .*ERROR' "$LOG"; then
+              echo "::error::R CMD check 出现 ERROR（$LOG）"
+              exit 1
+            fi
+          done
+
+      - name: Package unit tests
+        run: Rscript epi-ingest/tests/test_epi_ingest.R
 
       - name: End-to-end pipeline + golden smoke test
         # 默认只跑合成数据六层切片；--check 会以 golden 基线逐项校验，

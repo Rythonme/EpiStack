@@ -3,7 +3,7 @@
 把原始传染病监测数据，变成可发布的异常预警、空间风险图和健康不平等分析报告。
 纯 R 实现，零第三方依赖，断网可跑。
 
-[English](README.en.md) · 版本 `v0.1.1` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
+[English](README.en.md) · 版本 `v0.2.0` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
 
 [![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -21,7 +21,7 @@
 | L5 | `epiReport` | 单文件 HTML 报告 | 各层结果 → 可转发成果 |
 | L6 | `epiFlow` | 编排与可复现清单 | 全部 → 一键复现 |
 
-已发布 L0（`epiCore`），其余层按月发布，接口不变。
+已发布 L0（`epiCore`）与 L1（`epiIngest`），其余层按月发布，接口不变。
 
 契约——所有层只认这三样东西：
 
@@ -39,14 +39,23 @@ W
 ## 安装
 
 ```r
+# L0 契约与读取
 install.packages(
   "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
   repos = NULL, type = "source"
 )
-library(epiCore)
+
+# L1 多源接入与质控
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest)
 ```
 
-纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)。
+纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)
+与 [epi-ingest/README.md](epi-ingest/README.md)。
 
 ## 快速开始
 
@@ -115,6 +124,28 @@ read_counts(x, time_step = "year")     # 年序号
 read_counts(x, time_step = "auto")     # 按日期间隔推断
 ```
 
+## 用 `epiIngest` 接脏数据
+
+```r
+library(epiIngest)
+
+src <- ingest_source("csv", "counts.csv",
+                     mapping = list(date = "日期", region = "省份", count = "发病数"))
+
+ingest_profile(ingest_read(src))   # 先看：列类型、缺失率、日期范围、重复键
+
+rules <- ingest_qc_default(geo)    # 默认规则 + 地区白名单
+res   <- qc_apply(src, rules)      # error 剔除，warn 保留并标记，逐行留痕
+qc_report(res, "质控单.html")       # 单文件报告，可直接发给数据提供方
+
+core <- ingest_counts(src, rules = rules, geo = geo, time_step = "month")
+core$ingest$n_dropped              # 规则剔除了多少行
+```
+
+规则可以存成文件跟着项目走，`qc_apply(src, "config/qc_rules.json")` 即可复用。
+Excel / 数据库 / HTTP 接口 / 栅格协变量走可选适配器，缺包时
+`epi_ingest_capabilities()` 会明确告诉你缺哪个。
+
 ## 数据与隐私
 
 仓库只包含合成数据：`demo/make_demo_data.R` 用固定种子生成 31 个虚构地区（`D01`–`D31`）的面板，不对应任何真实行政区。所有示例和默认链路都只跑这份数据。
@@ -126,6 +157,8 @@ read_counts(x, time_step = "auto")     # 按日期间隔推断
 ```
 EpiStack/
 ├── epi-core/                  # L0：正式 R 包（源码 / 文档 / 单测 / schema）
+├── epi-ingest/                # L1：正式 R 包（多源读取 / 质控 / 报告 / 脱敏）
+├── ingest_demo/               # L1 演示：合成数据 → 质控单 → 契约等价性
 ├── demo/                      # 合成数据生成器
 ├── vertical_slice/            # 六层端到端示例
 ├── case_hfrs_real/            # 面板用例（默认模拟数据，--local 读本地私有数据）
@@ -138,7 +171,8 @@ EpiStack/
 - [ROADMAP.md](ROADMAP.md) —— 各层发布状态
 - [docs/monthly/](docs/monthly/) —— 每月任务与实测记录
 - [CHANGELOG.md](CHANGELOG.md) —— 变更日志
-- [epi-core/README.md](epi-core/README.md) —— 包的使用与安装细节
+- [epi-core/README.md](epi-core/README.md) —— L0 包的使用与安装细节
+- [epi-ingest/README.md](epi-ingest/README.md) —— L1 包的使用与安装细节
 
 ## 许可
 

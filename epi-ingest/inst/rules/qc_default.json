@@ -1,0 +1,18 @@
+{
+  "format_version": "1",
+  "name": "epi-default",
+  "required": ["date", "region", "count"],
+  "unique_key": ["date", "region"],
+  "range": {
+    "count": [0, 10000000]
+  },
+  "date_seq": {
+    "by": "month",
+    "max_gap": 1
+  },
+  "outlier": {
+    "method": "mad",
+    "k": 8
+  },
+  "note": "通用默认规则：任何监测计数表都该过的检查。地区白名单与跨字段一致性需要 geo 表或人口列，请在项目自己的规则文件里追加，不要改这里。"
+}

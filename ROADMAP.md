@@ -4,9 +4,9 @@
 > [README.md](README.md) 回答「体系是什么」，本文件回答「什么时候做到哪一步、每月怎么更新」。
 >
 > - 主仓：[github.com/Rythonme/EpiStack](https://github.com/Rythonme/EpiStack)（公开，MIT）
-> - 当前月度版本：**v0.1**（月内修订 **v0.1.1**）· 2026-11 已归档
-> - 进行中：**v0.2** · 2026-12 · 卫星仓 `epi-ingest`（**2026-11-13 提前启动**，任务已布置）
-> - 月度归档：[2026-11](docs/monthly/2026-11.md) · 进行中：[2026-12](docs/monthly/2026-12.md)
+> - 当前月度版本：**v0.2**（2026-12 的任务提前完成）· 卫星仓 `epi-ingest`
+> - 已发布：**v0.1 / v0.1.1**（`epi-core`）· **v0.2.0**（`epi-ingest`）
+> - 月度归档：[2026-11](docs/monthly/2026-11.md) · [2026-12](docs/monthly/2026-12.md)
 > - 最近更新：2026-11-13
 
 ---
@@ -33,7 +33,7 @@
 | 月份 | 版本 | 卫星仓 | 加厚层 | 状态 | 当月可独立交付的东西 | Release |
 |---|---|---|---|---|---|---|
 | **2026-11** | v0.1 | `epi-core` + 薄切片 | L0 / L6 | ✅ **已完成** | 正式 R 包（契约 / 编码 / 邻接 / `read_counts()`）、六层全通、模拟数据演示、主仓编排与 CI | [v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1) · [v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1) |
-| 2026-12 | v0.2 | `epi-ingest` | L1 | 🔜 **进行中（11-13 提前启动）** | 多源读取器（CSV / Excel / 数据库 / API）+ 规则化质控报告 + 栅格协变量 zonal stats + 脱敏 | 计划 v0.2 |
+| 2026-12 | v0.2 | `epi-ingest` | L1 | ✅ **已完成（11-13 提前交付）** | 多源读取器（CSV / Excel / 数据库 / API）+ 规则化质控报告 + 栅格协变量 zonal stats + 脱敏 | `v0.2.0` |
 | 2027-01 | v0.3 | `epi-alert` | L2 | ⬜ 计划 | 4 种预警算法统一接口 + 阈值配置；`WarnEpi` / `surveillance` 适配器 | — |
 | 2027-02 | v0.4 | `epi-space-basic` | L3 | ⬜ 计划 | Moran / LISA / 热点图、GWR / MGWR | — |
 | 2027-03 | v0.5 | `epi-space-bayes` | L3 | ⬜ 计划 | BYM2 / INLA 模板、景观格局指数（抽自 HFRS 990m 网格流水线） | — |
@@ -54,7 +54,7 @@
 
 - **[2026-11 · 立项月](docs/monthly/2026-11.md)** — `epi-core` 正式 R 包、W1–W4 四周任务、实测结果、踩坑记录、下月交接
 
-- **[2026-12 · 数据接入月](docs/monthly/2026-12.md)** — 🔜 进行中（2026-11-13 提前启动）：`epiIngest` W1–W4 任务、接口草案、适配器矩阵、可量化验收标准；代码尚未开始，随开发补实测记录
+- **[2026-12 · 数据接入月](docs/monthly/2026-12.md)** — ✅ 已完成（2026-11-13 提前交付）：`epiIngest` 0.2.0，16 个导出函数、96 项单测、`R CMD check` 0 ERROR，契约与 `read_counts()` 逐位等价，golden 37 PASS 未改基线
 
 后续每月归档放在 `docs/monthly/YYYY-MM.md`，模板见 [TEMPLATE.md](docs/monthly/TEMPLATE.md)。
 归档文件**只追加不回溯修改**：已结束月份的文件保持不变，纠错写进当月新归档或 CHANGELOG。

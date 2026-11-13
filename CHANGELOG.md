@@ -2,6 +2,45 @@
 
 本项目所有版本遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [v0.2.0] — 2026-11-13（L1 落地：`epiIngest` 可用）
+
+### 新增：卫星包 `epi-ingest/`（`epiIngest` 0.2.0）
+
+- **读取**：`ingest_source()` / `ingest_read()` / `ingest_profile()`。支持 CSV / TSV / 任意分隔符、
+  UTF-8 / GBK / BOM 自动识别、目录或路径向量的多文件纵向合并；`$data` 只放契约列，
+  `$raw` 保留原始列，`$meta` 记录编码 / 分隔符 / md5 / 强制转换失败数。
+- **质控**：`qc_rules()` / `qc_apply()` / `qc_report()`。7 类内置规则（必填、唯一键、数值范围、
+  未来日期、日期断档、地区白名单、MAD/IQR 异常值、跨字段一致性），error 剔除 / warn 保留并标记，
+  逐行留痕到行号；规则可 `qc_rules_write()` 存成 JSON 随项目走；全局 `ingest_on_warn("drop" | "error")`。
+- **报告**：控制台 / CSV（含逐行明细）/ 单文件 HTML（内联样式、无外部资源、可离线打开）。
+- **血缘**：`ingest_lineage()` / `ingest_lineage_write()`，记录文件 md5、规则哈希、行数变化、包版本。
+- **脱敏**：`ingest_desensitize()`，加盐 SHA-256 假名 + 可选日期平移，盐值本身不入元数据。
+- **适配器**（全在 `Suggests`，缺包明确报错不静默降级）：Excel（readxl）、数据库（DBI）、
+  HTTP 接口（base R 即可，自带 JSON 解析）、栅格 zonal 统计（terra）。
+  `epi_ingest_capabilities()` 一条命令看清当前环境能用哪些。
+- **一站式**：`ingest_counts()` 输出 `epi_contract`，内部只调用一次 `epiCore::read_counts()`。
+
+### 主仓改动
+
+- `R/pipeline_plan.R`：L1 `current_impl` 由 `thin` 改为 `formal`
+- `vertical_slice/run_e2e.R`：L0/L1 改用 `ingest_counts()`（`rules = NULL`），整条链路验证「换层不改口径」
+- 新增流水线阶段 `ingest_l1`（`ingest_demo/run_ingest.R`）：合成 31 地区 × 36 月 → 注入 6 类脏数据演示质控
+  → 出契约并与 `read_counts()` 比对 → 写血缘
+- 新增 `bootstrap_ingest.R`：已安装优先，装不上回退 `source()`，并在源码比 `.rlib` 新时自动重装
+- CI：`R-CMD-check` 同时构建检查两个包，并跑 `epi-ingest/tests/test_epi_ingest.R`
+
+### 实测（R 4.6.0 / Windows）
+
+| 项目 | 结果 |
+|---|---|
+| `Rscript epi-ingest/tests/test_epi_ingest.R` | **96 PASS / 0 FAIL** |
+| `R CMD check epiIngest_0.2.0.tar.gz` | **0 ERROR / 1 WARNING（中文注释）/ 0 NOTE** |
+| 契约等价性 | 同一 CSV：`ingest_counts()` 与 `read_counts()` 表逐位一致；切片 4161 → 4159 行（剔 2 行）、邻接权重一致 |
+| golden 冒烟 | **37 PASS / 0 FAIL**，基线未更新 |
+| `ingest_l1` 阶段 | 1116 行 / 31 地区；注入 1117 行脏数据命中 7 类规则，剔除 5 行、warn 4 行 |
+
+---
+
 ## [2026-12 提前启动] — 2026-11-13（只布置任务与文档，不含代码）
 
 ### 新增

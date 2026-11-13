@@ -21,6 +21,8 @@ if (!nzchar(root))
   root <- if (length(f0)) dirname(dirname(normalizePath(f0[1L]))) else dirname(getwd())
 source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
+source(file.path(root, "bootstrap_ingest.R"), encoding = "UTF-8")
+ingest_mode <- epi_bootstrap_ingest(file.path(root, "epi-ingest"))
 
 args     <- commandArgs(trailingOnly = TRUE)
 out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
@@ -87,14 +89,15 @@ raw <- rbind(raw, raw[100L, ])
 raw$count[200L] <- NA_integer_
 raw_csv <- file.path(out_dir, "raw_counts.csv")
 write.csv(raw, raw_csv, row.names = FALSE, fileEncoding = "UTF-8")
-# 正式 L0：read_counts() 读取只读原始表 -> epi_contract（含 geo / W / 质控 / meta）
-core <- read_counts(
+# 正式 L0 + L1：ingest_counts() 内部只调用一次 read_counts()，口径不变；
+# rules = NULL 表示不做额外规则剔除，用整条链路验证「换层不改口径」。
+core <- ingest_counts(
   raw_csv,
-  geo          = geo,
-  time_step    = "week",
-  n_periods    = N_PERIODS,
-  disease      = "HFRS",
-  source_label = "合成示例面板（固定种子 20261110；非真实监测数据）"
+  rules     = NULL,
+  geo       = geo,
+  time_step = "week",
+  n_periods = N_PERIODS,
+  disease   = "HFRS"
 )
 validate_contract(core)                    # 字段 / 类型 / 主键 / 非负计数全量校验
 contract <- core$data
@@ -110,8 +113,8 @@ mark_stage("L0 epi-core", sprintf("契约 v%s 校验通过；原始面板 %d 行
 saveRDS(contract, file.path(cache_dir, "L0_contract.rds"))
 
 # ---------------- L1 · 接入与质控（由 read_counts() 内的 epi_qc() 完成） ----------------
-mark_stage("L1 epi-ingest", sprintf("read_counts() 质控剔除 %d 行（重复 %d / 缺失 %d）；清洁契约表 %d 行",
-                                    n_drop, dup_n, na_n, nrow(contract)))
+mark_stage("L1 epi-ingest", sprintf("ingest_counts() 质控剔除 %d 行（重复 %d / 缺失 %d）；清洁契约表 %d 行；%s",
+                                    n_drop, dup_n, na_n, nrow(contract), ingest_mode))
 
 # ---------------- L2 · 监测与预警 ----------------
 cur_year <- max(contract$year)

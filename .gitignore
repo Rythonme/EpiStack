@@ -7,6 +7,7 @@ case_hfrs_real/data_paths.local.R
 pipeline_out/
 tests/_smoke_out/
 demo/data/
+ingest_demo/output/
 
 # 运行期缓存与中间结果
 **/cache/

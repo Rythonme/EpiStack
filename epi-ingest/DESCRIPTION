@@ -1,0 +1,21 @@
+Package: epiIngest
+Type: Package
+Title: Multi-Source Ingestion and Rule-Based Quality Control for Surveillance Counts
+Version: 0.2.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Ingestion layer (L1) of the EpiStack ecosystem. Reads surveillance
+    counts from delimited text files and, optionally, from Excel workbooks,
+    database queries, HTTP endpoints and raster covariates, then applies a
+    declarative quality-control rule set with per-row audit trails. Rules are
+    data, not code, so a project can version its own rule file. Output is the
+    versioned long-table contract consumed by every downstream layer.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+Imports: utils, stats, tools
+Suggests: epiCore, readxl, openxlsx, DBI, terra, openssl, digest
+NeedsCompilation: no
+URL: https://github.com/Rythonme/EpiStack
+BugReports: https://github.com/Rythonme/EpiStack/issues
