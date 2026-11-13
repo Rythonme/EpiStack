@@ -13,13 +13,13 @@
 # =============================================================
 
 # 私有数据源路径解析：公开仓库不含任何绝对路径。
-# 优先环境变量 EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES，其次读取不入库的
-# case_hfrs_real/data_paths.local.R；未配置时返回不存在的哨兵，
+# 优先环境变量 EPISTACK_PANEL_INCIDENCE / _GRAPH / _SES，其次读取不入库的
+# case_panel/data_paths.local.R；未配置时返回不存在的哨兵，
 # 使该阶段在 CI 与他人机器上自动 skipped_missing_data。
 epi_local_requires <- function(root = getwd()) {
   keys <- c("incidence", "graph", "ses")
   p <- stats::setNames(rep("", length(keys)), keys)
-  cfg <- file.path(root, "case_hfrs_real", "data_paths.local.R")
+  cfg <- file.path(root, "case_panel", "data_paths.local.R")
   if (file.exists(cfg)) {
     e <- new.env(parent = baseenv())
     try(sys.source(cfg, envir = e), silent = TRUE)
@@ -29,7 +29,7 @@ epi_local_requires <- function(root = getwd()) {
     }
   }
   for (k in keys) {
-    ev <- Sys.getenv(paste0("EPISTACK_HFRS_", toupper(k)), unset = "")
+    ev <- Sys.getenv(paste0("EPISTACK_PANEL_", toupper(k)), unset = "")
     if (nzchar(ev)) p[[k]] <- ev
   }
   v <- unname(unlist(p))
@@ -47,7 +47,7 @@ EPI_STACK_PLAN <- list(
     list(id = "L1", name = "epi-ingest",  role = "多源读取与质控",
          current_impl = "formal", impl = "epi-ingest/R/*.R", satellite = "epi-ingest",  since = "2026-12"),
     list(id = "L2", name = "epi-alert",   role = "季节性基线带与异常信号",
-         current_impl = "thin",   impl = "vertical_slice / case_hfrs_real 内置", satellite = "epi-alert",   since = "2027-01"),
+         current_impl = "thin",   impl = "vertical_slice / case_panel 内置", satellite = "epi-alert",   since = "2027-01"),
     list(id = "L3", name = "epi-space",   role = "空间自相关 / BYM2 / 景观格局",
          current_impl = "thin",   impl = "内置 Moran's I 置换检验", satellite = "epi-space",   since = "2027-02"),
     list(id = "L4", name = "epi-ineq",    role = "集中指数 / SII / 可达性",
@@ -81,23 +81,23 @@ EPI_STACK_PLAN <- list(
     ),
     list(
       id = "panel_demo", label = "模拟面板端到端演示（默认）",
-      script = "case_hfrs_real/run_hfrs.R",
+      script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "synthetic", requires = character(0),
-      env = list(EPISTACK_HFRS_MODE = "demo"),
-      inputs = c("case_hfrs_real/run_hfrs.R", "demo/make_demo_data.R"),
+      env = list(EPISTACK_PANEL_MODE = "demo"),
+      inputs = c("case_panel/run_panel.R", "demo/make_demo_data.R"),
       outputs = c("面板分析报告_模拟.html", "run_manifest_panel_模拟.json",
                   "alerts_panel_模拟.csv", "cache/L0_contract.rds"),
       report = "面板分析报告_模拟.html"
     ),
     list(
       id = "panel_local", label = "私有面板（本地数据，不入库）",
-      script = "case_hfrs_real/run_hfrs.R",
+      script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "real-local",
       requires = epi_local_requires(if (exists("root", inherits = TRUE)) root else getwd()),
-      env = list(EPISTACK_HFRS_MODE = "local"),
-      inputs = c("case_hfrs_real/run_hfrs.R"),
+      env = list(EPISTACK_PANEL_MODE = "local"),
+      inputs = c("case_panel/run_panel.R"),
       outputs = c("面板分析报告.html", "run_manifest_panel.json",
                   "alerts_panel.csv", "cache/L0_contract.rds"),
       report = "面板分析报告.html"

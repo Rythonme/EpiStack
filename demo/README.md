@@ -17,21 +17,21 @@
 
 ```bash
 # 默认即模拟数据：生成到 output/demo_data/ 并跑完整六层链路
-Rscript case_hfrs_real/run_hfrs.R
+Rscript case_panel/run_panel.R
 
 # 月度链路（生成器同时产出地区编码一致的模拟月度发病数据）
-Rscript case_hfrs_real/run_hfrs.R --monthly case_hfrs_real/output/demo_data/demo_counts_month.csv
+Rscript case_panel/run_panel.R --monthly case_panel/output/demo_data/demo_counts_month.csv
 
 # 主仓编排
 Rscript pipeline.R --check
 ```
 
-生成的文件落在 `case_hfrs_real/output/demo_data/` 或 `pipeline_out/<stage>/demo_data/`，均在 `.gitignore` 中，不会入库。
+生成的文件落在 `case_panel/output/demo_data/` 或 `pipeline_out/<stage>/demo_data/`，均在 `.gitignore` 中，不会入库。
 
 ## 换成自己的数据
 
-1. 复制 [data_paths.example.R](../case_hfrs_real/data_paths.example.R) 为 `case_hfrs_real/data_paths.local.R`（已忽略），填入自己的路径；
-2. 或设置 `EPISTACK_HFRS_INCIDENCE` / `_GRAPH` / `_SES` / `_MONTHLY` 四个环境变量；
-3. 运行 `Rscript case_hfrs_real/run_hfrs.R --local`。
+1. 复制 [data_paths.example.R](../case_panel/data_paths.example.R) 为 `case_panel/data_paths.local.R`（已忽略），填入自己的路径；
+2. 或设置 `EPISTACK_PANEL_INCIDENCE` / `_GRAPH` / `_SES` / `_MONTHLY` 四个环境变量；
+3. 运行 `Rscript case_panel/run_panel.R --local`。
 
 输入数据只读，产物留在本地，不入库也不上传。

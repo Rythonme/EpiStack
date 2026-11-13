@@ -2,8 +2,8 @@
 .rlib/
 
 # 真实数据与本地实测产物：不入库、不上传
-case_hfrs_real/output/
-case_hfrs_real/data_paths.local.R
+case_panel/output/
+case_panel/data_paths.local.R
 pipeline_out/
 tests/_smoke_out/
 demo/data/

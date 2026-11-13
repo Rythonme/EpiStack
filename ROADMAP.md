@@ -25,7 +25,7 @@ L2–L6 目前由 `vertical_slice/run_e2e.R` 中的薄实现承担，接口与�
 ## 数据与隐私
 
 - 仓库只含合成数据：`demo/make_demo_data.R` 以固定种子生成 31 个虚构地区（`D01`–`D31`）的面板与邻接，不对应任何真实行政区。
-- 真实监测数据不随仓库分发：通过不入库的 `case_hfrs_real/data_paths.local.R` 或 `EPISTACK_HFRS_*` 环境变量指向本地文件，数据只读、产物留在本地。
+- 真实监测数据不随仓库分发：通过不入库的 `case_panel/data_paths.local.R` 或 `EPISTACK_PANEL_*` 环境变量指向本地文件，数据只读、产物留在本地。
 - CI 只跑合成数据；发布站点出现 `*.rds` 或本地数据路径即判失败。
 
 ## 已知限制

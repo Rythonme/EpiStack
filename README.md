@@ -77,7 +77,7 @@ Rscript pipeline.R --list      # 只看分层计划
 
 ```bash
 Rscript vertical_slice/run_e2e.R      # 六层示例，合成数据
-Rscript case_hfrs_real/run_hfrs.R     # 面板示例，内置模拟数据
+Rscript case_panel/run_panel.R         # 面板示例，内置模拟数据
 ```
 
 两条命令都不需要外部数据，clone 下来直接可跑。
@@ -150,7 +150,7 @@ Excel / 数据库 / HTTP 接口 / 栅格协变量走可选适配器，缺包时
 
 仓库只包含合成数据：`demo/make_demo_data.R` 用固定种子生成 31 个虚构地区（`D01`–`D31`）的面板，不对应任何真实行政区。所有示例和默认链路都只跑这份数据。
 
-真实监测数据不随仓库分发，也不上传。把路径写进不入库的 `case_hfrs_real/data_paths.local.R`（模板见 `data_paths.example.R`），或通过 `EPISTACK_HFRS_*` 环境变量传入即可；数据始终只读，产出留在本地。
+真实监测数据不随仓库分发，也不上传。把路径写进不入库的 `case_panel/data_paths.local.R`（模板见 `data_paths.example.R`），或通过 `EPISTACK_PANEL_*` 环境变量传入即可；数据始终只读，产出留在本地。
 
 ## 目录
 
@@ -161,7 +161,7 @@ EpiStack/
 ├── ingest_demo/               # L1 演示：合成数据 → 质控单 → 契约等价性
 ├── demo/                      # 合成数据生成器
 ├── vertical_slice/            # 六层端到端示例
-├── case_hfrs_real/            # 面板用例（默认模拟数据，--local 读本地私有数据）
+├── case_panel/                # 面板用例（默认模拟数据，--local 读本地私有数据）
 ├── pipeline.R                 # 编排入口
 └── tests/                     # 端到端自检与基线
 ```

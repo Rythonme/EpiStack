@@ -73,7 +73,7 @@ Run one chain on its own (from the repository root):
 
 ```bash
 Rscript vertical_slice/run_e2e.R      # six-layer example, synthetic data
-Rscript case_hfrs_real/run_hfrs.R     # panel example, built-in synthetic data
+Rscript case_panel/run_panel.R         # panel example, built-in synthetic data
 ```
 
 Neither command needs external data.
@@ -144,7 +144,7 @@ Rules can be stored as JSON next to your project and reused with `qc_apply(src, 
 
 The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
 
-Real surveillance data is never shipped or uploaded. Point an ignored local config (`case_hfrs_real/data_paths.local.R`, template in `data_paths.example.R`) or the `EPISTACK_HFRS_*` environment variables at your files; data stays read-only and outputs stay on your machine.
+Real surveillance data is never shipped or uploaded. Point an ignored local config (`case_panel/data_paths.local.R`, template in `data_paths.example.R`) or the `EPISTACK_PANEL_*` environment variables at your files; data stays read-only and outputs stay on your machine.
 
 ## Layout
 
@@ -155,7 +155,7 @@ EpiStack/
 ├── ingest_demo/               # L1 demo: synthetic data → QC report → contract check
 ├── demo/                      # synthetic data generator
 ├── vertical_slice/            # six-layer end-to-end example
-├── case_hfrs_real/            # panel case (synthetic by default, --local for private data)
+├── case_panel/                # panel case (synthetic by default, --local for private data)
 ├── pipeline.R                 # orchestration entry point
 └── tests/                     # end-to-end self-checks and baselines
 ```
