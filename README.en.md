@@ -1,51 +1,49 @@
-# EpiStack — End-to-end infectious disease surveillance, spatial and equity analytics
+# EpiStack
 
-[中文说明](README.md) · Version `v0.1.1` · [Roadmap](ROADMAP.md) · [Nov 2026 log](docs/monthly/2026-11.md) · MIT · R >= 4.2 · zero third-party dependencies
+Turn raw infectious disease surveillance data into publishable aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-> **Repository**: [github.com/Rythonme/EpiStack](https://github.com/Rythonme/EpiStack) (public · first published 2026-11-11)
+[中文说明](README.md) · Version `v0.1.1` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
-> Turn one read-only surveillance table (`date, region, count, population, disease`)
-> into a **single self-contained HTML report** covering data QC, aberration detection,
-> spatial autocorrelation, health inequality and a reproducibility manifest —
-> with one command, offline, in Chinese or English output.
+## What it is
 
-## Why this exists
+A layered analysis chain. Each layer does one job, and layers talk to each other only through the same data contract, so you can use any layer on its own or run the whole chain.
 
-Mature open-source tools already cover the *algorithm* layer: `avallecam/epichannel`
-(endemic channels, unmaintained since 2020), `WarnEpi` (EWMA/CUSUM/Serfling flags),
-`EpiSignalDetection` (ECDC Atlas + pandoc + Shiny, EU English format), and
-`R4EPI/sitrep` (manual R Markdown outbreak templates). What is missing is the
-**delivery layer**: a low-friction, offline, one-CSV-to-one-report pipeline that a
-prefecture-level epidemiologist can run without pandoc, Shiny, INLA or internet access.
-
-EpiStack is designed as a **system**, not a bigger single tool. The strategy is:
-ship a thin but complete L0–L6 chain in month one, then replace one layer per month
-with an independently installable satellite R package. The chain never breaks because
-every layer speaks the same contract.
-
-## Architecture
-
-| Layer | Satellite repo | Responsibility | Status (2026-11) |
+| Layer | Package | Responsibility | Input → output |
 |---|---|---|---|
-| L0 | `epi-core` | Versioned contract, region codes, adjacency weights | **formal R package v0.1.0** |
-| L1 | `epi-ingest` | Multi-source readers, QC report | thin (`read_counts()` / `epi_qc()`) |
-| L2 | `epi-alert` | Seasonal baseline bands, aberration signals | thin |
-| L3 | `epi-space` | Moran / LISA / BYM2 / landscape metrics | thin (Moran + 999 permutations) |
-| L4 | `epi-ineq` | Concentration index, SII, accessibility | thin (population-weighted CI) |
-| L5 | `epi-report` | Single-file HTML, dashboard | thin (inline SVG) |
-| L6 | `epi-flow` | Orchestration, cache, manifest | thin (`pipeline.R` + golden test) |
+| L0 | `epiCore` | Data contract, region codes, adjacency weights | raw table → contract table |
+| L1 | `epiIngest` | Multi-source readers and QC | CSV / Excel / database / API → clean table |
+| L2 | `epiAlert` | Seasonal baselines, aberration signals | table → alert list |
+| L3 | `epiSpace` | Moran / LISA / BYM2 | table + weights → risk map |
+| L4 | `epiIneq` | Concentration index / SII / decomposition | table + SES → inequality metrics |
+| L5 | `epiReport` | Single-file HTML reports | layer results → shareable output |
+| L6 | `epiFlow` | Orchestration and manifest | everything → one-command rerun |
 
-Contract (the only interface between layers):
+L0 (`epiCore`) is released. The remaining layers ship monthly; their interfaces will not change.
 
+The contract — every layer reads and writes only these:
+
+```r
+# long table
+date · region · count · population · disease
+
+# geographic and socio-economic coding
+geo   # region, population, ses, row/col or admin code
+
+# adjacency weights (row-standardized, symmetric, no islands)
+W
 ```
-date · region · count · population · disease     # long table
-+ geo: region, row/col or admin code, population, ses
-+ W: row-standardized, symmetric spatial weights
+
+## Install
+
+```r
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+library(epiCore)
 ```
 
-L2–L4 are deliberately **adapters**, not re-implementations. Heavy engines
-(`surveillance`, `r-inla`, `EpiNow2`, `healthequal`) belong in `Suggests`; the
-end-to-end chain must still run with base R only, offline.
+Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md).
 
 ## Quickstart
 
@@ -53,115 +51,92 @@ end-to-end chain must still run with base R only, offline.
 git clone https://github.com/Rythonme/EpiStack.git
 cd EpiStack
 
-# 1. Full chain (synthetic data) + golden integration smoke test
-Rscript pipeline.R --check
-
-# 2. Just the six-layer vertical slice
-Rscript vertical_slice/run_e2e.R
-
-# 2b. Full chain on the built-in synthetic panel (default, no private data)
-Rscript case_hfrs_real/run_hfrs.R
-
-# 3. Install the formal contract package (local source)
-R CMD INSTALL epi-core
-Rscript -e 'library(epiCore); print(epi_schema()$version)'
-
-# 3b. Or install epiCore over the network, no clone and no extra packages:
-Rscript -e 'install.packages("https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz", repos=NULL, type="source"); library(epiCore); print(epi_schema()$version)'
-
-# 4. Inspect the monthly plan
-Rscript pipeline.R --list
+Rscript pipeline.R --check     # run the full chain and verify results
+Rscript pipeline.R --list      # show the layer plan only
 ```
 
-For the development version, `remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")`
-is the standard syntax (verified on Windows only after the workaround below). On Windows, run `Sys.setenv(TAR = "internal")` first: the
-repository contains a few Chinese-named example files that the external `tar.exe` cannot decode
-under a non-UTF-8 locale (`input string ... is invalid`). `pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")`
-and the Release-URL one-liner above avoid this entirely. All three paths were verified on R 4.6.0 / Windows.
+Results land in `pipeline_out/`:
 
-`pipeline.R` options: `--all` (also run the local real-data HFRS chain when its
-read-only files exist), `--force` (ignore the fingerprint cache), `--check`
-(run `tests/smoke_e2e.R`), `--out <dir>`, `--list`.
-It uses input fingerprints (md5 of scripts + package sources) to skip unchanged
-stages — the core `targets` semantic, implemented in base R. A real `targets`
-pipeline is planned for the 2027-08 `epi-flow` satellite.
+- `site/index.html` — report site, open in any browser
+- `pipeline_manifest.json` — what ran, how long it took, contract version
+- `<stage>/` — layer reports, alert CSV, stage caches
 
-Outputs: `pipeline_out/<stage>/` (reports, alerts CSV, stage `rds` caches),
-`pipeline_out/pipeline_manifest.json`, and `pipeline_out/site/` (index + synthetic
-report + project kanban, safe to publish). All are git-ignored.
+Run one chain on its own:
 
-## The `epiCore` package
+```bash
+cd vertical_slice && Rscript run_e2e.R          # six-layer example on synthetic data
+Rscript case_hfrs_real/run_hfrs.R               # built-in synthetic panel (default)
+```
+
+Neither command needs external data.
+
+## Reading your own data with `epiCore`
 
 ```r
 library(epiCore)
 
 core <- read_counts(
-  "my_counts.csv",
-  geo = my_geo,                  # region, population, row, col, ses
-  time_step = "month",           # week / month / quarter / year / auto
-  graph = "provinces.graph",     # optional INLA adjacency (or row/col grid)
-  mapping = list(date = "ym", region = "prov", count = "cases_est")
+  "counts.csv",
+  geo       = geo,                 # region, population, ses, row, col
+  time_step = "month",             # week / month / quarter / year / auto
+  graph     = "provinces.graph",   # optional INLA adjacency; row/col builds a grid
+  mapping   = list(date = "date", region = "province", count = "cases")
 )
-validate_contract(core)
-core$data   # date, region, count, population, disease, year, period
-core$geo    # normalized region codes
-core$W      # row-standardized weights
-core$qc     # per-row QC masks + human-readable report
-core$meta   # contract version, granularity, source, row counts
+
+core$data                # date region count population disease year period
+core$geo                 # normalized region codes
+core$W                   # adjacency weights
+core$qc$report           # rows flagged by each QC check
+validate_contract(core)  # TRUE on success
 ```
 
-Also exported: `epi_schema()`, `normalize_region()`, `epi_region_codes()`,
-`epi_adjacency()`, `epi_read_graph()`, `epi_qc()`, `epi_period()`.
-The machine-readable contract lives at `epi-core/inst/contract/schema.json`.
-`bootstrap_core.R` installs the package into a local `.rlib/` automatically and
-falls back to sourcing `R/` files when installation is unavailable (offline).
+`read_counts()` handles column aliases, BOM/whitespace/administrative suffixes, date parsing (`YYYY`, `YYYY-MM`, `YYYY-MM-DD`), duplicate keys and dirty rows, population denominators, period mapping, adjacency construction and contract validation.
 
-## Verification
+| Function | Purpose |
+|---|---|
+| `read_counts()` | main L0 + L1 entry point, returns an `epi_contract` |
+| `validate_contract()` / `epi_contract_check()` | strict / non-strict contract validation |
+| `epi_schema()` | versioned contract definition (mirrors `inst/contract/schema.json`) |
+| `normalize_region()` / `epi_region_codes()` | region normalization and code tables |
+| `epi_adjacency()` / `epi_read_graph()` | grid rook/queen weights, INLA `.graph` adjacency |
+| `epi_qc()` | standalone QC checker |
+| `epi_period()` / `epi_wrap_period()` / `epi_period_label()` | week / month / quarter / year mapping |
 
-- `tests/test_epi_core.R`: 40 base-R assertions (schema, codes, periods, adjacency, QC, main entry point)
-- `tests/smoke_e2e.R`: **37 PASS / 0 FAIL** — replays the fixed-seed chain and compares
-  every key metric against `tests/golden/vertical_slice_v0.1.0.json`, including the
-  6 injected outbreak weeks, Moran's I, concentration index, stage caches and HTML integrity
-- `R CMD build` + `R CMD check` on the source tarball (R 4.6.0): **0 ERROR, 0 NOTE, 1 WARNING**
-  (the WARNING is a portability note about UTF-8 Chinese comments; functionality is unaffected)
-- Synthetic slice: 4159 rows, 56 signals, Moran's I = 0.441 (p = 0.031), CI = −0.067
-- Synthetic panel demo (31 regions, fixed seed 20261110): 651 rows, QC 0 drops,
-  Moran's I = 0.406 (p = 0.003), cumulative I = 0.858 (p = 0.001), CI = −0.113;
-  monthly demo 1116 rows / 372 region-periods / 11 signals
+Switch granularity with one argument:
 
-**Privacy / data source:** the public repository ships **no real surveillance data**.
-Every example runs on `demo/make_demo_data.R` synthetic data. A private local panel can be
-connected through the git-ignored `case_hfrs_real/data_paths.local.R` or `EPISTACK_HFRS_*`
-environment variables with `--local`; that data and its results are never committed or uploaded.
-`--monthly <CSV>` switches the same contract to a monthly chain; no derived values are
-presented as real monthly observations.
+```r
+read_counts(x, time_step = "week")     # 52 periods
+read_counts(x, time_step = "month")    # 12 periods
+read_counts(x, time_step = "quarter")  # 4 periods
+read_counts(x, time_step = "year")     # annual index
+read_counts(x, time_step = "auto")     # inferred from date spacing
+```
 
-## CI, reproducibility and privacy
+## Data and privacy
 
-- `.github/workflows/R-CMD-check.yaml` — on push/PR: build + `R CMD check` (0 ERROR
-  gate) plus `Rscript pipeline.R --check`; uploads check logs and the synthetic site.
-- `.github/workflows/nightly-e2e.yml` — nightly chain rerun + a privacy guard + GitHub
-  Pages deployment of `pipeline_out/site/`. Enable Pages with source "GitHub Actions" once.
-- `renv.lock` — a minimal zero-dependency snapshot (R 4.6.0 + CRAN repository). There are
-  no third-party packages yet; when one is added, regenerate it with `renv::snapshot()`.
-- Raw surveillance data is **read-only** and never committed: `.gitignore` excludes
-  `.rlib/`, `case_hfrs_real/output/`, `pipeline_out/`, `tests/_smoke_out/`, `*.rds`.
-  CI runs synthetic data only; local real-data reports are never uploaded or published.
+The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
 
-## Roadmap (one releasable repo per month)
+Real surveillance data is never shipped or uploaded. Point an ignored local config (`case_hfrs_real/data_paths.local.R`, template in `data_paths.example.R`) or the `EPISTACK_HFRS_*` environment variables at your files; data stays read-only and outputs stay on your machine.
 
-2026-11 `epi-core` + thin slice → 12 `epi-ingest` → 2027-01 `epi-alert` →
-02/03 `epi-space` → 04 `epi-ineq` → 05 `epi-access` → 06/07 report & dashboard →
-08 `epi-flow` (real `targets`) → 09 GeoAI → 10 **EpiStack 1.0** integration.
-Each month only `R/pipeline_plan.R` changes one `current_impl` line.
+## Layout
 
-Full status table, the monthly update SOP and version/privacy conventions live in
-[ROADMAP.md](ROADMAP.md); each month gets a `docs/monthly/YYYY-MM.md` archive
-(template: [TEMPLATE.md](docs/monthly/TEMPLATE.md)) and a `vX.Y` GitHub Release.
-Published: [v0.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1),
-[v0.1.1](https://github.com/Rythonme/EpiStack/releases/tag/v0.1.1).
+```
+EpiStack/
+├── epi-core/                  # L0: formal R package (source, docs, tests, schema)
+├── demo/                      # synthetic data generator
+├── vertical_slice/            # six-layer end-to-end example
+├── case_hfrs_real/            # panel case (synthetic by default, --local for private data)
+├── pipeline.R                 # orchestration entry point
+└── tests/                     # end-to-end self-checks and baselines
+```
+
+## Documentation
+
+- [ROADMAP.md](ROADMAP.md) — layer release status
+- [docs/monthly/](docs/monthly/) — monthly tasks and measured results
+- [CHANGELOG.md](CHANGELOG.md) — change log
+- [epi-core/README.md](epi-core/README.md) — package usage and install details
 
 ## License
 
-MIT. Research/engineering prototype: thresholds and definitions must be calibrated
-to the local disease and reporting system; outputs are **not** public-health decisions.
+MIT. Research and engineering prototype: thresholds and definitions must be calibrated to the local disease and reporting system; outputs are not public-health decisions.

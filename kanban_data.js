@@ -30,7 +30,7 @@ window.KANBAN_DATA = {
     { id: "T11", title: "包质量验证", desc: "R CMD INSTALL + library 可用；R CMD build + check 0 ERROR / 0 NOTE / 1 WARNING（中文注释可移植性）；两条链路最终回归通过", tag: "质量", week: "W1", status: "done" },
     { id: "T12", title: "公开发布 + 逐月更新机制", desc: "发布 Rythonme/EpiStack 公开仓（MIT）；ROADMAP.md 状态表/SOP、docs/monthly/2026-11.md 本月归档与模板；内置模拟数据生成器替代全部真实数据示例，公开仓库不含本机路径与真实观测值；v0.1 / v0.1.1 Release；中英文 README 补仓库地址与 clone 快速开始", tag: "发布", week: "W4+", status: "done" },
     { id: "B1", title: "2026-12 · epi-ingest（L1）", desc: "11-13 提前启动：epiIngest 包（多源读取 + 规则化质控 + 可选适配器 + 脱敏），W1–W4 见 T13–T16", tag: "路线图", week: "12月", status: "doing" },
-    { id: "T13", title: "W1 · 包骨架 + 零依赖读取器", desc: "epiIngest 骨架；ingest_source / ingest_read / ingest_profile；CSV-TSV-分隔符嗅探、编码与 BOM、多文件合并；100 万行 < 30 s；单测 ≥ 25", tag: "开发", week: "W1", status: "doing" },
+    { id: "T13", title: "W1 · 包骨架 + 零依赖读取器", desc: "接口原型已在本地跑通（可安装 epiIngest 0.0.1，25 PASS / 0 FAIL：BOM/GBK/分隔符/多文件/8 类规则/契约等价）；正式建包开发中。验收：100 万行 < 30 s；单测 ≥ 25", tag: "开发", week: "W1", status: "doing" },
     { id: "T14", title: "W2 · 规则化质控引擎 + 质控单 + 血统", desc: "qc_rules / qc_apply 分级 error-warn-info + 逐行 mask；qc_report 控制台- CSV-单文件 HTML；ingest_lineage JSON；8 类脏数据全命中；单测 ≥ 50", tag: "质量", week: "W2", status: "todo" },
     { id: "T15", title: "W3 · 可选适配器 + 脱敏 + 能力矩阵", desc: "Excel(readxl) / DB(DBI) / API(httr2+jsonlite) / 栅格 zonal(terra)；ingest_desensitize；capabilities 缺包明确报告；每适配器 skip-if-not-installed", tag: "开发", week: "W3", status: "todo" },
     { id: "T16", title: "W4 · 主仓接入 + 等价性 + v0.2 发版", desc: "ingest_counts → epi_contract；L1 thin→formal；切片 L1 换实现且数值逐位不变；golden 不更新基线；tag v0.2 + Release + tarball", tag: "发布", week: "W4", status: "todo" },
