@@ -147,8 +147,8 @@ epistack/                      # 主仓：契约定义、集成测试、编排�
 ## 5. 已经跑通的最小切片（不是纸面方案）
 
 ```bash
-cd "/f/00在研项目/05_Github/2026-11_epibulletin/vertical_slice"
-"/d/R/bin/x64/Rscript.exe" run_e2e.R
+cd vertical_slice
+Rscript run_e2e.R
 ```
 
 **实测输出（2026-11-10，R 4.6.0，1.5 秒；L0/L1 已换成 `epiCore` 正式包函数）**：
@@ -226,14 +226,13 @@ Rscript case_hfrs_real/run_hfrs.R --local
 
 ## 5.2 W2/W3 · 主仓编排、golden 冒烟测试与 CI
 
-**一条命令跑全部交付**（默认只跑合成数据，CI 上不需要、也读不到任何真实监测数据）：
+**一条命令跑全部交付**（在仓库根目录执行；默认只跑合成数据，CI 上不需要、也读不到任何真实监测数据）：
 
 ```bash
-cd "/f/00在研项目/05_Github/2026-11_epibulletin"
-"/d/R/bin/x64/Rscript.exe" pipeline.R --list              # 打印 L0–L6 分层计划
-"/d/R/bin/x64/Rscript.exe" pipeline.R --check             # 跑链路 + golden 集成冒烟测试
-"/d/R/bin/x64/Rscript.exe" pipeline.R --all --check       # 额外跑本机 HFRS 真实链路
-"/d/R/bin/x64/Rscript.exe" pipeline.R --force             # 忽略指纹缓存强制重跑
+Rscript pipeline.R --list              # 打印 L0–L6 分层计划
+Rscript pipeline.R --check             # 跑链路 + golden 集成冒烟测试
+Rscript pipeline.R --all --check       # 额外跑本机私有面板链路（未配置时自动跳过）
+Rscript pipeline.R --force             # 忽略指纹缓存强制重跑
 ```
 
 **W2 · targets 雏形**：`R/pipeline_plan.R` 是主仓唯一"每月改一行"的地方——把某层的
