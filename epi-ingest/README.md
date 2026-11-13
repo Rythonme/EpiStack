@@ -16,7 +16,10 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-install.packages("path/to/epi-ingest", repos = NULL, type = "source")
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  repos = NULL, type = "source"
+)
 library(epiIngest)
 ```
 
@@ -117,6 +120,9 @@ Rscript tests/test_epi_ingest.R
 夹具全部在临时目录现造，仓库里不放二进制数据。96 项断言覆盖编码、BOM、分隔符嗅探、
 多文件合并、8 类脏数据定位、warn 策略、规则 JSON 往返、报告三种出口、脱敏、
 可选适配器，以及与 `epiCore::read_counts()` 的逐位等价性。
+
+没装可选包时，对应的几项会打印 `SKIP` 而不是失败——这也是「核心零依赖」的一部分：
+CI 上只装 base R，脱敏、Excel、栅格那几段自动跳过，核心链路照样全绿。
 
 ## 许可证
 
