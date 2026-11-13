@@ -58,16 +58,16 @@ footer{font-size:11px;color:#8a97a5;text-align:center;margin-top:26px}
   </header>
 
   <div class="kpis">
-    <div class="kpi"><div class="v" id="k-total">0</div><div class="l">本月主线任务</div></div>
+    <div class="kpi"><div class="v" id="k-total">0</div><div class="l">任务总数</div></div>
     <div class="kpi g"><div class="v" id="k-done">0</div><div class="l">已完成</div></div>
     <div class="kpi b"><div class="v" id="k-doing">0</div><div class="l">进行中</div></div>
-    <div class="kpi p"><div class="v" id="k-backlog">0</div><div class="l">后续月份储备</div></div>
+    <div class="kpi p"><div class="v" id="k-backlog">0</div><div class="l">后续层</div></div>
   </div>
 
   <h2 class="sec">任务看板</h2>
   <div class="board" id="board"></div>
 
-  <h2 class="sec">四周里程碑</h2>
+  <h2 class="sec">版本里程碑</h2>
   <div class="mile" id="mile"></div>
 
   <h2 class="sec">更新日志</h2>
@@ -95,7 +95,7 @@ footer{font-size:11px;color:#8a97a5;text-align:center;margin-top:26px}
   var doing = main.filter(function(t){ return t.status === 'doing'; }).length;
   var pct = main.length ? Math.round(done / main.length * 100) : 0;
   document.getElementById('barfill').style.width = pct + '%';
-  document.getElementById('pct').textContent = '本月主线进度 ' + done + '/' + main.length + '（' + pct + '%）';
+  document.getElementById('pct').textContent = '完成进度 ' + done + '/' + main.length + '（' + pct + '%）';
   document.getElementById('k-total').textContent = main.length;
   document.getElementById('k-done').textContent = done;
   document.getElementById('k-doing').textContent = doing;

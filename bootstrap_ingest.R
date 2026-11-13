@@ -10,7 +10,7 @@ epi_bootstrap_ingest <- function(pkg_dir = file.path(epi_project_root(), "epi-in
   if (!dir.exists(lib_dir)) dir.create(lib_dir, recursive = TRUE, showWarnings = FALSE)
   .libPaths(c(normalizePath(lib_dir), .libPaths()))
 
-  # 开发期防坑：本机 .rlib 里的旧拷贝会遮蔽源码改动，源码更新则先清掉重装
+  # 开发期注意：.rlib 里的旧拷贝会遮蔽源码改动，源码更新则先清掉重装
   inst_desc <- file.path(lib_dir, "epiIngest", "DESCRIPTION")
   if (file.exists(inst_desc)) {
     src_files <- c(file.path(pkg_dir, "DESCRIPTION"),

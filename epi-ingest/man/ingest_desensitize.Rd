@@ -13,7 +13,7 @@ ingest_desensitize(x, salt, region = TRUE, date_shift_days = 0L,
 }
 \arguments{
   \item{x}{\code{epi_ingest} 对象或可直接读取的数据源。}
-  \item{salt}{盐值，必须由使用者提供，建议存在本机私有配置里，不要入库。}
+  \item{salt}{盐值，必须由使用者提供，建议存在本地私有配置里，不要入库。}
   \item{region}{是否把地区编码替换为假名。}
   \item{date_shift_days}{整体日期平移天数，0 表示不平移。}
   \item{drop}{需要从原始列中删除的字段名。}

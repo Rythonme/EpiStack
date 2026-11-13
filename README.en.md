@@ -1,8 +1,8 @@
 # EpiStack
 
-Turn raw infectious disease surveillance data into publishable aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
+Turn raw infectious disease surveillance data into aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-[中文说明](README.md) · Version `v0.1.1` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.md) · Version `v0.2.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## What it is
 
@@ -18,7 +18,7 @@ A layered analysis chain. Each layer does one job, and layers talk to each other
 | L5 | `epiReport` | Single-file HTML reports | layer results → shareable output |
 | L6 | `epiFlow` | Orchestration and manifest | everything → one-command rerun |
 
-L0 (`epiCore`) is released. The remaining layers ship monthly; their interfaces will not change.
+L0 (`epiCore`) and L1 (`epiIngest`) are released. The remaining layers ship monthly; their interfaces will not change.
 
 The contract — every layer reads and writes only these:
 
@@ -36,14 +36,22 @@ W
 ## Install
 
 ```r
+# L0 contract and readers
 install.packages(
   "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
   repos = NULL, type = "source"
 )
-library(epiCore)
+
+# L1 multi-source ingestion and QC
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest)
 ```
 
-Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md).
+Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md) and [epi-ingest/README.md](epi-ingest/README.md).
 
 ## Quickstart
 
@@ -61,11 +69,11 @@ Results land in `pipeline_out/`:
 - `pipeline_manifest.json` — what ran, how long it took, contract version
 - `<stage>/` — layer reports, alert CSV, stage caches
 
-Run one chain on its own:
+Run one chain on its own (from the repository root):
 
 ```bash
-cd vertical_slice && Rscript run_e2e.R          # six-layer example on synthetic data
-Rscript case_hfrs_real/run_hfrs.R               # built-in synthetic panel (default)
+Rscript vertical_slice/run_e2e.R      # six-layer example, synthetic data
+Rscript case_hfrs_real/run_hfrs.R     # panel example, built-in synthetic data
 ```
 
 Neither command needs external data.
@@ -112,6 +120,26 @@ read_counts(x, time_step = "year")     # annual index
 read_counts(x, time_step = "auto")     # inferred from date spacing
 ```
 
+## Cleaning messy inputs with `epiIngest`
+
+```r
+library(epiIngest)
+
+src <- ingest_source("csv", "counts.csv",
+                     mapping = list(date = "date", region = "province", count = "cases"))
+
+ingest_profile(ingest_read(src))   # column types, missingness, date range, duplicate keys
+
+rules <- ingest_qc_default(geo)    # default rules + region whitelist
+res   <- qc_apply(src, rules)      # errors dropped, warnings flagged, every row traced
+qc_report(res, "qc_report.html")   # single-file report you can send back to the data owner
+
+core <- ingest_counts(src, rules = rules, geo = geo, time_step = "month")
+core$ingest$n_dropped              # rows removed by the rules
+```
+
+Rules can be stored as JSON next to your project and reused with `qc_apply(src, "config/qc_rules.json")`. Excel, databases, HTTP endpoints and raster covariates go through optional adapters; `epi_ingest_capabilities()` tells you exactly which ones the current machine can run.
+
 ## Data and privacy
 
 The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
@@ -123,6 +151,8 @@ Real surveillance data is never shipped or uploaded. Point an ignored local conf
 ```
 EpiStack/
 ├── epi-core/                  # L0: formal R package (source, docs, tests, schema)
+├── epi-ingest/                # L1: formal R package (readers, QC, reports, masking)
+├── ingest_demo/               # L1 demo: synthetic data → QC report → contract check
 ├── demo/                      # synthetic data generator
 ├── vertical_slice/            # six-layer end-to-end example
 ├── case_hfrs_real/            # panel case (synthetic by default, --local for private data)
@@ -132,11 +162,12 @@ EpiStack/
 
 ## Documentation
 
+- Online demo: [rythonme.github.io/EpiStack](https://rythonme.github.io/EpiStack/) (reports and board)
 - [ROADMAP.md](ROADMAP.md) — layer release status
-- [docs/monthly/](docs/monthly/) — monthly tasks and measured results
 - [CHANGELOG.md](CHANGELOG.md) — change log
-- [epi-core/README.md](epi-core/README.md) — package usage and install details
+- [epi-core/README.md](epi-core/README.md) — L0 package usage and install details
+- [epi-ingest/README.md](epi-ingest/README.md) — L1 package usage and install details
 
 ## License
 
-MIT. Research and engineering prototype: thresholds and definitions must be calibrated to the local disease and reporting system; outputs are not public-health decisions.
+MIT. Thresholds and definitions must be calibrated to the local disease and reporting system; outputs are not public-health decisions.

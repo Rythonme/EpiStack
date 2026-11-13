@@ -73,14 +73,14 @@ Rscript pipeline.R --list      # 只看分层计划
 - `pipeline_manifest.json` —— 本次运行的清单（各层状态、耗时、契约版本）
 - `<stage>/` —— 各层的 HTML 报告、预警 CSV、阶段缓存
 
-单独跑一条链路：
+单独跑某条链路（都在仓库根目录执行）：
 
 ```bash
-cd vertical_slice && Rscript run_e2e.R          # 合成数据六层示例
-Rscript case_hfrs_real/run_hfrs.R               # 内置模拟面板（默认，无需配置）
+Rscript vertical_slice/run_e2e.R      # 六层示例，合成数据
+Rscript case_hfrs_real/run_hfrs.R     # 面板示例，内置模拟数据
 ```
 
-两条命令都不需要任何外部数据，clone 下来直接可跑。
+两条命令都不需要外部数据，clone 下来直接可跑。
 
 ## 用 `epiCore` 读自己的数据
 
@@ -168,8 +168,9 @@ EpiStack/
 
 ## 文档
 
+- 在线示例：[rythonme.github.io/EpiStack](https://rythonme.github.io/EpiStack/)（报告与看板）
 - [ROADMAP.md](ROADMAP.md) —— 各层发布状态
-- [docs/monthly/](docs/monthly/) —— 每月任务与实测记录
+- [docs/monthly/](docs/monthly/) —— 每个发布周期的说明与实测结果
 - [CHANGELOG.md](CHANGELOG.md) —— 变更日志
 - [epi-core/README.md](epi-core/README.md) —— L0 包的使用与安装细节
 - [epi-ingest/README.md](epi-ingest/README.md) —— L1 包的使用与安装细节

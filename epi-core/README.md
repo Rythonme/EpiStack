@@ -5,7 +5,6 @@
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 
 > 一个**零第三方依赖**的 R 包：把一张原始监测计数表，变成所有下游模块都认的同一份契约。
-> 这是 EpiStack 端到端体系的第一块地基，也是 2026-11 的月度卫星仓。
 
 ## 为什么需要它
 
@@ -23,11 +22,9 @@ date · region · count · population · disease     # 长表（主键 date+regi
 
 ## 安装
 
-### 联网安装（推荐：一行、零第三方依赖）
+### 联网安装（推荐）
 
-`epi-core` 是主仓中的子目录包，已随 Release 附带构建好的源码 tarball。
-本地写法 `install.packages("path/to/epi-core", repos = NULL, type = "source")`
-只要把路径换成 URL 就是联网版：
+Release 附带构建好的源码 tarball，直接把 URL 交给 `install.packages()` 即可，不必 clone 仓库：
 
 ```r
 install.packages(
@@ -37,15 +34,15 @@ install.packages(
 library(epiCore)
 ```
 
-纯 base R、无编译代码，Windows 不需要 Rtools；URL 里的 `v0.1.1` 固定了版本，便于复现。
-该命令已在 R 4.6.0 / Windows 上从公网实测通过（0.1.0，16 个导出函数，契约版本 0.1.0）。
+纯 base R、无编译代码，Windows 不需要 Rtools。URL 里的 `v0.1.1` 固定了版本，写进分析脚本便于复现。
+0.1.0 共 16 个导出函数，契约版本 0.1.0。
 
 想跟开发分支、指定 tag 或提交，用 `remotes` / `pak`：
 
 ```r
 remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")
 
-# pak（实测通过，自带解压器）
+# pak：自带解压器，不受下面的 tar 问题影响
 pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")
 ```
 
@@ -134,11 +131,11 @@ Rscript tests/test_epi_core.R
 
 ### R CMD check
 
-源码 tarball 检查结果（R 4.6.0 / Windows）：**0 ERROR、0 NOTE、1 WARNING**。
+源码 tarball 检查结果：**0 ERROR、0 NOTE、1 WARNING**。
 唯一 WARNING 为 `checking code files for non-ASCII characters` —— R 源码含 UTF-8 中文注释
-与中文质控表头，在 UTF-8 环境下安装、加载、示例与测试均正常；若日后提交 CRAN，
-统一改为 `\uXXXX` 转义即可消除。注意本机 `LC_ALL=C.UTF-8` 会让 check 子进程异常，
-复现时先清除 `LC_ALL / LANG` 环境变量并使用纯 ASCII 临时路径。
+与中文质控表头，在 UTF-8 环境下安装、加载、示例与测试均正常；若提交 CRAN，
+统一改为 `\uXXXX` 转义即可消除。若 `check` 在中文 locale 或非 ASCII 路径下失败，
+先清空 `LC_ALL` / `LANG` 并使用纯 ASCII 临时路径。
 
 ## 契约版本规则
 
@@ -149,7 +146,7 @@ Rscript tests/test_epi_core.R
 ## 数据隐私
 
 本包只处理调用方传入的数据，不联网、不回写原始文件。仓库内只包含合成示例数据；
-真实监测数据及其聚合产物一律留在本机，不入库、不上传。
+真实监测数据及其聚合产物一律留在本地，不入库、不上传。
 
 ---
 

@@ -33,11 +33,11 @@ jobs:
           use-public-rspm: true
 
       - name: Run pipeline + golden smoke test
-        # 故意不加 --all：真实 HFRS 面板只在本机，CI 上不存在也不需要。
+        # 不加 --all：私有面板只在本地存在，CI 上不需要。
         run: Rscript pipeline.R --check
 
       - name: Privacy guard
-        # 站点里不允许出现任何真实数据产物；写死保险，防止后续误改 build_site()。
+        # 站点里不允许出现任何真实数据产物；显式校验，防止后续改动漏掉。
         run: |
           BAD=$(find pipeline_out/site -type f \( -iname '*HFRS*' -o -iname '*真实*' -o -iname '*.rds' \) -print)
           if [ -n "$BAD" ]; then

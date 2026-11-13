@@ -18,7 +18,7 @@
 #' 对已读取的数据做脱敏
 #'
 #' @param x epi_ingest 对象或可直接读取的数据源
-#' @param salt 盐值；必须由使用者提供，建议存在本机私有配置里，不要入库
+#' @param salt 盐值；必须由使用者提供，建议存在本地私有配置里，不要入库
 #' @param region 是否把地区编码替换为假名
 #' @param date_shift_days 整体日期平移天数，0 表示不平移
 #' @param drop 需要从原始列中删除的字段名
@@ -60,7 +60,7 @@ ingest_desensitize <- function(x, salt, region = TRUE, date_shift_days = 0L,
   if (!is.null(key_file) && !is.null(map)) {
     dir.create(dirname(key_file), recursive = TRUE, showWarnings = FALSE)
     utils::write.csv(map, key_file, row.names = FALSE, fileEncoding = "UTF-8")
-    .epi_warn("%s 是再识别密钥，请只保存在本机私有目录并加入 .gitignore", key_file)
+    .epi_warn("%s 是再识别密钥，请只保存在本地私有目录并加入 .gitignore", key_file)
   }
 
   ing$data <- d

@@ -5,7 +5,7 @@ EpiStack 体系的 **L1 层**：把「数据怎么进来」这件事做扎实。
 
 - **零强制依赖**：`Imports` 只有 `utils` / `stats` / `tools`。断网只装 base R 也能读 CSV 并质控。
 - **规则是数据不是代码**：质控规则存成 JSON 随项目走，换口径改文件、不改包。
-- **换层不改口径**：`ingest_counts()` 只调用一次 `epiCore::read_counts()`，与直接调用该函数的数值结果必然一致。
+- **口径与 `epiCore` 一致**：`ingest_counts()` 内部只调用一次 `epiCore::read_counts()`，不复制契约逻辑，因此两者结果一致。
 
 ## 安装
 
@@ -64,7 +64,7 @@ rules <- qc_rules(
   region_code = list(allowed = geo$region),        # 未知编码即 error
   outlier    = list(method = "mad", k = 8),        # 异常值记 warn
   cross_field = list(list(lhs = "count", op = "<=", rhs = "population")),
-  name = "2026-hfrs"
+  name = "counts-qc"
 )
 ```
 
@@ -99,7 +99,7 @@ safe <- ingest_desensitize(ingest_read(src), salt = Sys.getenv("EPI_SALT"))
 safe$data$region
 ```
 
-盐值不要入库；需要再识别时用 `key_file` 把对照表写到本机私有目录。
+盐值不要入库；需要再识别时用 `key_file` 把对照表写到本地私有目录。
 
 ## 文档
 
@@ -121,8 +121,7 @@ Rscript tests/test_epi_ingest.R
 多文件合并、8 类脏数据定位、warn 策略、规则 JSON 往返、报告三种出口、脱敏、
 可选适配器，以及与 `epiCore::read_counts()` 的逐位等价性。
 
-没装可选包时，对应的几项会打印 `SKIP` 而不是失败——这也是「核心零依赖」的一部分：
-CI 上只装 base R，脱敏、Excel、栅格那几段自动跳过，核心链路照样全绿。
+没装可选包时，相关几项打印 `SKIP` 而不是失败：核心功能只依赖 base R。
 
 ## 许可证
 

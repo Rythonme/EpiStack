@@ -1,15 +1,15 @@
 {
   "pipeline": "EpiStack vertical slice v0.1.0",
-  "generated_at": "2026-11-10 22:03:13",
+  "generated_at": "2026-11-13 10:11:18",
   "r_version": "R version 4.6.0 (2026-04-24 ucrt)",
   "seed": 20261110,
   "stages": [
-    {"stage": "L0 epi-core", "detail": "契约 v0.1.0 校验通过；原始面板 4161 行、16 地区；邻接 16x16（installed）", "elapsed_sec": 1.31},
-    {"stage": "L1 epi-ingest", "detail": "read_counts() 质控剔除 2 行（重复 1 / 缺失 1）；清洁契约表 4159 行", "elapsed_sec": 1.32},
-    {"stage": "L2 epi-alert", "detail": "季节性基线带 832 组；评估 816 期；关注/预警/告警共 56 条（注入暴发命中 6 周）", "elapsed_sec": 1.43},
-    {"stage": "L3 epi-space", "detail": "rook 邻接权重矩阵 16x16；Moran's I = 0.441（置换检验 p = 0.031）", "elapsed_sec": 1.46},
-    {"stage": "L4 epi-ineq", "detail": "集中指数 CI = -0.067；低/高 SES 地区报告率比 = 1.23", "elapsed_sec": 1.46},
-    {"stage": "L5 epi-report", "detail": "单文件综合报告输出：端到端演示报告.html（15520 字节）", "elapsed_sec": 1.53}
+    {"stage": "L0 epi-core", "detail": "契约 v0.1.0 校验通过；原始面板 4161 行、16 地区；邻接 16x16（installed）", "elapsed_sec": 1.43},
+    {"stage": "L1 epi-ingest", "detail": "ingest_counts() 质控剔除 2 行（重复 1 / 缺失 1）；清洁契约表 4159 行；installed", "elapsed_sec": 1.44},
+    {"stage": "L2 epi-alert", "detail": "季节性基线带 832 组；评估 816 期；关注/预警/告警共 56 条（注入暴发命中 6 周）", "elapsed_sec": 1.56},
+    {"stage": "L3 epi-space", "detail": "rook 邻接权重矩阵 16x16；Moran's I = 0.441（置换检验 p = 0.031）", "elapsed_sec": 1.59},
+    {"stage": "L4 epi-ineq", "detail": "集中指数 CI = -0.067；低/高 SES 地区报告率比 = 1.23", "elapsed_sec": 1.59},
+    {"stage": "L5 epi-report", "detail": "单文件综合报告输出：端到端演示报告.html（15508 字节）", "elapsed_sec": 1.66}
   ],
   "contract": "date, region, count, population, disease",
   "core": {"package": "epiCore", "version": "0.1.0", "load": "installed"},

@@ -1,20 +1,19 @@
 # =============================================================
-# EpiStack v0.1.1 · 地区面板端到端适配器（默认使用内置模拟数据）
+# 地区面板端到端适配器（默认使用内置模拟数据）
 #
 # 用法：
-#   Rscript run_hfrs.R                       # 内置模拟数据（公开仓库默认，CI 安全）
-#   Rscript run_hfrs.R --local               # 本机配置的私有面板（数据不入库）
-#   Rscript run_hfrs.R --monthly <月度CSV>   # 切到 time_step="month" 的月度链路
+#   Rscript run_hfrs.R                       # 内置模拟数据（默认）
+#   Rscript run_hfrs.R --local               # 使用私有面板（路径来自本地配置）
+#   Rscript run_hfrs.R --monthly <月度CSV>   # 切到 time_step = "month" 的月度链路
 #
-# 隐私约定：本文件不含任何本机路径、真实数据文件名或真实观测值。
-#   公开仓库默认跑纯合成数据；本机私有面板路径只放在不入库的
-#   case_hfrs_real/data_paths.local.R（模板见 data_paths.example.R），
-#   或用 EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES / _MONTHLY 环境变量注入。
-#   只读外部数据，绝不回写源文件；产物全部落在本项目 output/ 且不入库。
+# 数据约定：本文件不含任何绝对路径或真实观测值。私有面板的路径写在
+#   不入库的 data_paths.local.R（模板见 data_paths.example.R），或用
+#   EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES / _MONTHLY 环境变量注入。
+#   外部数据只读，不回写源文件；产物落在 output/ 且不入库。
 #
-# 口径说明：面板粒度为「地区-年」，月度面板只有气候协变量、没有发病结局，
+# 粒度说明：面板为「地区-年」，月度面板只有气候协变量、没有发病结局，
 #   因此默认按年际基线做异常检测；拿到月度发病 CSV 后 --monthly 会用
-#   同一个 read_counts() 契约切到季节性基线带链路，无需改动上下游。
+#   同一个 read_counts() 契约切到季节性基线链路，上下游无需改动。
 # =============================================================
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -23,7 +22,7 @@ monthly_csv <- if (!is.na(ix_m) && length(args) >= ix_m + 1L) args[ix_m + 1L] el
 # 月度模式单独命名产物，避免覆盖默认报告
 suffix <- if (!is.null(monthly_csv)) "_月度" else ""
 
-# 数据模式：公开仓库默认纯模拟；--local 或 EPISTACK_HFRS_MODE=local 才读本机私有面板
+# 数据模式：默认纯模拟；--local 或 EPISTACK_HFRS_MODE=local 才读本地私有面板
 mode_env <- Sys.getenv("EPISTACK_HFRS_MODE", unset = "")
 hf_mode <- if (nzchar(mode_env)) mode_env else if ("--local" %in% args) "local" else "demo"
 is_demo <- identical(hf_mode, "demo")
@@ -46,7 +45,7 @@ dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
 SEED <- 20261110L
 K_SIGMA <- 1.645
 
-# ---------------- 数据源配置（公开仓库不含任何本机路径） ----------------
+# ---------------- 数据源配置（不含任何绝对路径） ----------------
 needed <- c("incidence", "graph", "ses", "monthly")
 DATA <- list(incidence = "", graph = "", ses = "", monthly = "")
 
@@ -55,7 +54,7 @@ if (is_demo) {
   source(file.path(root, "demo", "make_demo_data.R"), encoding = "UTF-8", local = TRUE)
   DATA <- epi_make_demo_data(file.path(out_dir, "demo_data"), seed = SEED)[needed]
 } else {
-  # 本机私有配置（不入库）；也可用 EPISTACK_HFRS_* 环境变量逐项覆盖
+  # 本地私有配置（不入库）；也可用 EPISTACK_HFRS_* 环境变量逐项覆盖
   local_cfg <- file.path(root, "case_hfrs_real", "data_paths.local.R")
   if (file.exists(local_cfg)) source(local_cfg, local = TRUE, encoding = "UTF-8")
   for (nm in names(DATA)) {
@@ -65,7 +64,7 @@ if (is_demo) {
 }
 bad <- needed[!nzchar(unlist(DATA[needed])) | !file.exists(unlist(DATA[needed]))]
 if (length(bad))
-  stop(sprintf("数据源未配置或不存在（%s）。公开仓库默认 --demo；本机私有数据请复制 case_hfrs_real/data_paths.example.R 为 data_paths.local.R，或设置 EPISTACK_HFRS_* 环境变量。",
+  stop(sprintf("数据源未配置或不存在（%s）。默认 --demo；私有数据请复制 case_hfrs_real/data_paths.example.R 为 data_paths.local.R，或设置 EPISTACK_HFRS_* 环境变量。",
                paste(bad, collapse = ", ")), call. = FALSE)
 t_start <- Sys.time()
 stage_log <- list()
@@ -104,7 +103,7 @@ pop24 <- as.numeric(inc$pop[inc$year == 2024][match(provs, inc$province[inc$year
 geo <- data.frame(region = provs, population = pop24, pop = pop24,
                   ses = ses_norm, gdp_pcap = gdp, stringsAsFactors = FALSE)
 
-# cases_est 为面板提供的计数结局（模拟或本机配置），取整后作为计数
+# cases_est 为面板提供的计数结局（模拟或本地配置），取整后作为计数
 hfrs_raw <- data.frame(
   year = inc$year, province = inc$province,
   cases = pmax(0L, as.integer(round(inc$cases_est))),
@@ -127,11 +126,11 @@ if (!is.null(monthly_csv)) {
     mapping = list(date = "year", region = "province", count = "cases",
                    population = "pop", disease = "disease"),
     time_step = "year", n_periods = length(unique(inc$year)),
-    disease = "HFRS", source_label = if (is_demo) "内置模拟数据（地区-年）" else "本机配置面板（地区-年）"
+    disease = "HFRS", source_label = if (is_demo) "内置模拟数据（地区-年）" else "本地配置面板（地区-年）"
   )
   time_step <- "year"
   n_periods <- length(unique(inc$year))
-  data_label <- if (is_demo) "模拟面板（合成，固定种子）" else "本机配置面板（私有，不入库）"
+  data_label <- if (is_demo) "模拟面板（合成，固定种子）" else "本地配置面板（私有，不入库）"
 }
 validate_contract(core)
 contract <- core$data
@@ -428,7 +427,7 @@ warn_html <- if (time_step == "year") {
          if (is_demo)
            '本报告全部数值由<b>内置模拟数据生成器</b>产生（固定种子、地区编码 D01–D31），不含任何真实观测记录，仅用于演示端到端链路。'
          else
-           '本报告使用<b>本机配置的私有面板</b>，数据只读、不入库、不上传；公开仓库不包含该数据。',
+           '本报告使用<b>本地配置的私有面板</b>，数据只读、不入库、不上传；公开仓库不包含该数据。',
          '面板粒度为「地区-年」；月度气候面板（', monthly_axis$rows,
          ' 行）只有气候协变量，<b>没有月度发病结局</b>，因此本次按年际基线做异常检测。',
          '拿到月度发病 CSV 后运行 <code>Rscript run_hfrs.R --monthly 你的数据.csv</code> 即可切换，',
@@ -514,7 +513,7 @@ manifest <- sprintf(paste0(
 '  "monthly_axis": {"rows": %d, "regions": %d, "periods": %d, "note": "%s"},\n',
 '  "outputs": {"report": "%s", "alerts_csv": "%s", "cache": "cache/L0,L2,L3,L4 rds"},\n',
 '  "reproduce": "Rscript run_hfrs.R [--local] [--monthly <月度CSV>]",\n',
-'  "privacy": "公开版本默认纯模拟数据；本机私有面板只读、不入库、不上传"\n}\n'),
+'  "privacy": "默认使用纯模拟数据；私有面板只读、不入库、不上传"\n}\n'),
  format(Sys.time(), "%Y-%m-%d %H:%M:%S"), R.version.string, SEED,
  paste(vapply(stage_log, function(s) sprintf('    {"stage": "%s", "detail": "%s", "elapsed_sec": %.2f}',
                                              s$name, gsub('"', "'", s$detail), s$secs),

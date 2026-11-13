@@ -3,7 +3,7 @@
 #
 # 用法：
 #   Rscript pipeline.R                 # 跑合成数据六层切片（CI 安全，默认）
-#   Rscript pipeline.R --all          # 额外跑本机私有面板链路（仅本机有配置时）
+#   Rscript pipeline.R --all          # 额外跑私有面板链路（仅本地有配置时）
 #   Rscript pipeline.R --check        # 跑链路 + golden 集成冒烟测试
 #   Rscript pipeline.R --force        # 忽略指纹缓存，强制重跑
 #   Rscript pipeline.R --list         # 只打印分层计划
@@ -11,7 +11,7 @@
 #
 # 设计：声明式分层计划（R/pipeline_plan.R）+ 输入指纹缓存 + 阶段产物校验，
 # 用 base R 复现 targets 的 skip-if-unchanged 语义；不装 targets 也能一条命令跑通。
-# 公开版本默认只跑纯模拟数据；本机私有面板链路只在本机执行，产物落 pipeline_out/ 且不入库、不发布。
+# 默认只跑纯模拟数据；私有面板链路只在本地执行，产物落 pipeline_out/ 且不入库、不发布。
 # =============================================================
 
 cli_args <- commandArgs(trailingOnly = TRUE)
@@ -147,18 +147,18 @@ build_site <- function(results) {
     '.note{background:#fff7ed;border-left:5px solid #e67e22;padding:12px 16px;',
     'border-radius:8px;font-size:13px;color:#7a4b12}</style></head><body><div class="w">',
     '<h1>EpiStack · 示例报告站</h1>',
-    '<p class="sub">端到端传染病时空分析与健康不平等体系 ｜ 契约 v', plan$contract_version,
+    '<p class="sub">传染病监测数据的分析链路 ｜ 契约 v', plan$contract_version,
     ' ｜ 生成于 ', format(Sys.time(), "%Y-%m-%d %H:%M"), '</p>',
     '<div class="cards">',
     '<a class="card" href="report.html">端到端演示报告<small>合成数据 · 六层链路 · 单文件离线 HTML</small></a>',
     '<a class="card" href="demo-report.html">模拟面板演示报告<small>31 地区面板 · 预警 / 空间 / 不平等 · 纯合成</small></a>',
-    '<a class="card" href="kanban.html">项目进展看板<small>主线任务、里程碑与月度路线图</small></a>',
+    '<a class="card" href="kanban.html">交付看板<small>各层任务、版本里程碑与更新记录</small></a>',
     '</div>',
     '<div class="box"><h3>本次编排执行状态</h3><table>',
     '<tr><th>流水线</th><th>状态</th><th>耗时(秒)</th><th>数据</th></tr>', rows,
     '</table></div>',
     '<div class="note"><b>隐私声明：</b>本页所有报告均基于<b>内置模拟数据</b>，不含任何真实观测记录。',
-    '本机私有面板及其分析报告只在本机执行，不入库、不上传、不发布。</div>',
+    '私有数据及其分析报告只在本地运行，不入库、不上传、不发布。</div>',
     '</div></body></html>')
   writeLines(enc2utf8(idx), file.path(site, "index.html"), useBytes = TRUE)
   invisible(site)

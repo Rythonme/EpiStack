@@ -8,11 +8,11 @@
 #   * 每个 stage 声明输入（脚本与包源码）、输出、依赖层
 #   * 指纹未变且产物齐全则跳过（targets 的 skip-if-unchanged）
 #   * 统一 manifest 记录每阶段状态、耗时、契约版本
-# 2027-08 的 epi-flow 卫星仓会把本计划翻译成真正的 targets 管道，
+# 2027-08 的 epi-flow 卫星仓会把本计划翻译成 targets 管道，
 # 届时替换执行器即可，不改本文件描述的层级与产物契约。
 # =============================================================
 
-# 本机私有数据源路径解析：公开仓库不含任何绝对路径。
+# 私有数据源路径解析：公开仓库不含任何绝对路径。
 # 优先环境变量 EPISTACK_HFRS_INCIDENCE / _GRAPH / _SES，其次读取不入库的
 # case_hfrs_real/data_paths.local.R；未配置时返回不存在的哨兵，
 # 使该阶段在 CI 与他人机器上自动 skipped_missing_data。
@@ -57,11 +57,11 @@ EPI_STACK_PLAN <- list(
     list(id = "L6", name = "epi-flow",    role = "编排 / 缓存 / 可复现清单",
          current_impl = "thin",   impl = "pipeline.R + manifest + golden", satellite = "epi-flow",    since = "2027-08")
   ),
-  # 每条流水线是一个可独立运行的 stage；requires 里的本地真实数据缺失时自动跳过，
-  # 因此 CI（无本机数据）也能完整跑通并发布合成数据报告。
+  # 每条流水线是一个可独立运行的 stage；requires 里的私有数据缺失时自动跳过，
+  # 因此在没有私有数据的机器与 CI 上也能完整跑通并发布合成数据报告。
   pipelines = list(
     list(
-      id = "vertical_slice", label = "合成数据六层切片（CI 安全）",
+      id = "vertical_slice", label = "合成数据六层切片",
       script = "vertical_slice/run_e2e.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "synthetic", requires = character(0),
@@ -80,7 +80,7 @@ EPI_STACK_PLAN <- list(
       report = "质控单.html"
     ),
     list(
-      id = "panel_demo", label = "模拟面板端到端演示（CI 安全，公开默认）",
+      id = "panel_demo", label = "模拟面板端到端演示（默认）",
       script = "case_hfrs_real/run_hfrs.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "synthetic", requires = character(0),
@@ -91,7 +91,7 @@ EPI_STACK_PLAN <- list(
       report = "面板分析报告_模拟.html"
     ),
     list(
-      id = "panel_local", label = "本机私有面板实测（仅本机，数据不入库）",
+      id = "panel_local", label = "私有面板（本地数据，不入库）",
       script = "case_hfrs_real/run_hfrs.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
       privacy = "real-local",
