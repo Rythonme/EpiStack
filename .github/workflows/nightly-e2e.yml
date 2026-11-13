@@ -1,7 +1,7 @@
 name: Nightly E2E + Pages
 
 # 每晚（UTC 18:00 / 北京 02:00）重跑合成数据端到端链路，
-# 并把「仅合成数据」的示例报告与项目看板发布到 GitHub Pages。
+# 并把「仅合成数据」的示例报告与交付看板发布到 GitHub Pages。
 # 首次使用需在仓库 Settings → Pages 里把 Source 设为 GitHub Actions。
 on:
   schedule:
