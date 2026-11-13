@@ -233,6 +233,9 @@ ok("JSON 可解析回来", is.list(json_read(lf)))
 
 # =============================================================
 section("脱敏")
+if (!requireNamespace("openssl", quietly = TRUE) && !requireNamespace("digest", quietly = TRUE)) {
+  cat("  SKIP 脱敏：缺 openssl / digest（核心链路不依赖它们）\n")
+} else {
 ing_clean <- ingest_read(f_utf8)
 ds <- ingest_desensitize(ing_clean, salt = "unit-test-salt")
 ok("地区变假名", all(grepl("^R[0-9a-f]{10}$", ds$data$region)), ds$data$region[1])
@@ -248,6 +251,7 @@ ok("日期平移", identical(ingest_desensitize(ing_clean, salt = "s", date_shif
                         ing_clean$data$date[1] + 7L))
 ok("缺盐时报错",
    inherits(tryCatch(ingest_desensitize(ing_clean), error = function(e) e), "error"))
+}
 
 # =============================================================
 section("能力自检与可选适配器")
