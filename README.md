@@ -272,12 +272,12 @@ skip-if-unchanged：指纹未变且产物齐全就跳过；已实测「脚本改
 
 ## 6. 十二个月路线图（每月一个可发布仓库）
 
-> **完整状态表、逐月更新 SOP 与版本约定见 [ROADMAP.md](ROADMAP.md)**；每月任务归档在 [docs/monthly/](docs/monthly/2026-11.md)，本月为 [2026-11](docs/monthly/2026-11.md)。以下为速览。
+> **完整状态表、逐月更新 SOP 与版本约定见 [ROADMAP.md](ROADMAP.md)**；每月任务归档在 [docs/monthly/](docs/monthly/2026-11.md)：已完成 [2026-11](docs/monthly/2026-11.md)，进行中 [2026-12](docs/monthly/2026-12.md)。以下为速览。
 
 | 月份 | 卫星仓 | 加厚层 | 当月可独立交付的东西 |
 |---|---|---|---|
 | **2026-11** | `epi-core` + 薄切片 | L0 / L6 | ✅ **v0.1.0 已发布**：正式 R 包（40 项单测 + R CMD check）、六层全通、HFRS 真实数据实测、v0.1 tag |
-| 2026-12 | `epi-ingest` | L1 | 多源读取器 + 质控报告；支持栅格协变量 zonal stats |
+| 2026-12 | `epi-ingest` | L1 | 🔜 **已提前启动（11-13）**：多源读取器（CSV/Excel/DB/API）+ 规则化质控报告 + 栅格协变量 zonal stats + 脱敏；任务与验收见 [2026-12 归档](docs/monthly/2026-12.md) |
 | 2027-01 | `epi-alert` | L2 | 4 种预警算法统一接口 + 阈值配置；`WarnEpi`/`surveillance` 适配器 |
 | 2027-02 | `epi-space-basic` | L3 | Moran/LISA/热点图、GWR/MGWR |
 | 2027-03 | `epi-space-bayes` | L3 | BYM2/INLA 模板、景观格局指数（直接抽自 HFRS 流水线） |

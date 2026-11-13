@@ -6,7 +6,7 @@ window.KANBAN_DATA = {
     name: "EpiStack",
     subtitle: "端到端传染病时空分析与健康不平等体系 · 2026-11 立项",
     repo: "github.com/Rythonme/EpiStack（公开 · MIT · 2026-11-11 发布）+ 卫星仓 epi-core/",
-    updated: "2026-11-11 08:15",
+    updated: "2026-11-13 09:15",
     owner: "本人",
     target: "已公开发布，按 ROADMAP.md 逐月更新 ｜ 12 月 epi-ingest · v0.2 ｜ EpiStack 1.0 · 2027-10"
   },
@@ -29,7 +29,11 @@ window.KANBAN_DATA = {
     { id: "T10", title: "面板适配器与 v0.1 发布（W4）", desc: "默认走内置模拟数据；本机私有面板本地验收（数据与结果不公开）；--monthly 月度切换接口；CHANGELOG / MIT / v0.1 tag。口径修正：本机私有面板仅地区-年粒度，公开版本用模拟数据完整演示月度链路", tag: "发布", week: "W4", status: "done" },
     { id: "T11", title: "包质量验证", desc: "R CMD INSTALL + library 可用；R CMD build + check 0 ERROR / 0 NOTE / 1 WARNING（中文注释可移植性）；两条链路最终回归通过", tag: "质量", week: "W1", status: "done" },
     { id: "T12", title: "公开发布 + 逐月更新机制", desc: "发布 Rythonme/EpiStack 公开仓（MIT）；ROADMAP.md 状态表/SOP、docs/monthly/2026-11.md 本月归档与模板；内置模拟数据生成器替代全部真实数据示例，公开仓库不含本机路径与真实观测值；v0.1 / v0.1.1 Release；中英文 README 补仓库地址与 clone 快速开始", tag: "发布", week: "W4+", status: "done" },
-    { id: "B1", title: "2026-12 · epi-ingest（L1）", desc: "多源读取器 + 质控报告 + 栅格协变量 zonal stats", tag: "路线图", week: "12月", status: "backlog" },
+    { id: "B1", title: "2026-12 · epi-ingest（L1）", desc: "11-13 提前启动：epiIngest 包（多源读取 + 规则化质控 + 可选适配器 + 脱敏），W1–W4 见 T13–T16", tag: "路线图", week: "12月", status: "doing" },
+    { id: "T13", title: "W1 · 包骨架 + 零依赖读取器", desc: "epiIngest 骨架；ingest_source / ingest_read / ingest_profile；CSV-TSV-分隔符嗅探、编码与 BOM、多文件合并；100 万行 < 30 s；单测 ≥ 25", tag: "开发", week: "W1", status: "doing" },
+    { id: "T14", title: "W2 · 规则化质控引擎 + 质控单 + 血统", desc: "qc_rules / qc_apply 分级 error-warn-info + 逐行 mask；qc_report 控制台- CSV-单文件 HTML；ingest_lineage JSON；8 类脏数据全命中；单测 ≥ 50", tag: "质量", week: "W2", status: "todo" },
+    { id: "T15", title: "W3 · 可选适配器 + 脱敏 + 能力矩阵", desc: "Excel(readxl) / DB(DBI) / API(httr2+jsonlite) / 栅格 zonal(terra)；ingest_desensitize；capabilities 缺包明确报告；每适配器 skip-if-not-installed", tag: "开发", week: "W3", status: "todo" },
+    { id: "T16", title: "W4 · 主仓接入 + 等价性 + v0.2 发版", desc: "ingest_counts → epi_contract；L1 thin→formal；切片 L1 换实现且数值逐位不变；golden 不更新基线；tag v0.2 + Release + tarball", tag: "发布", week: "W4", status: "todo" },
     { id: "B2", title: "2027-01 · epi-alert（L2）", desc: "4 种预警算法统一接口；WarnEpi / surveillance 适配器", tag: "路线图", week: "1月", status: "backlog" },
     { id: "B3", title: "2027-02/03 · epi-space（L3）", desc: "Moran / LISA / GWR，再上 BYM2 与景观格局指数", tag: "路线图", week: "2–3月", status: "backlog" },
     { id: "B4", title: "2027-04 · epi-ineq（L4）", desc: "CI / SII / 分解 + 中文报告，呼应统计大赛课题", tag: "路线图", week: "4月", status: "backlog" },
@@ -45,7 +49,8 @@ window.KANBAN_DATA = {
     { name: "W2 契约版本化 + 冒烟 + 编排", date: "11/10 提前", state: "done" },
     { name: "W3 CI + renv + gh-pages", date: "11/10 提前", state: "done" },
     { name: "W4 HFRS 实测 + v0.1 tag", date: "11/10 提前", state: "done" },
-    { name: "公开发布 + 逐月更新机制", date: "11/11", state: "done" }
+    { name: "公开发布 + 逐月更新机制", date: "11/11", state: "done" },
+    { name: "2026-12 epi-ingest 提前启动", date: "11/13", state: "doing" }
   ],
   changelog: [
     { date: "2026-11-10 21:15", text: "v1 立项：竞品直验、单点周报工具提案、零依赖原型跑通、看板建立。" },
@@ -53,7 +58,8 @@ window.KANBAN_DATA = {
     { date: "2026-11-10 22:05", text: "W1+W4 提前完成：epi-core 正式 R 包（40 项单测 / R CMD check 0 ERROR）；切片 L0/L1 换成包调用且数值逐位一致；本机私有面板端到端验收（数据与结果不公开）；--monthly 月度接口冒烟通过；v0.1 tag 已打。" },
     { date: "2026-11-10 23:45", text: "W2+W3 提前完成：pipeline.R 分层编排（md5 指纹缓存 / 统一 manifest / 静态报告站）；tests/golden 契约基线 + 冒烟 37 PASS / 0 FAIL；R-CMD-check 与 nightly-e2e+Pages 两个工作流（含隐私守卫）；零依赖 renv.lock、英文 README、R/epi_json.R 零依赖 JSON 读写。四周任务全部完成，v0.1.1 待发。" },
     { date: "2026-11-11 00:20", text: "首次公开发布到 github.com/Rythonme/EpiStack（公开 / MIT）；新增 ROADMAP.md（12 个月状态表 + 逐月更新 SOP + 版本/隐私约定）、docs/monthly/2026-11.md 本月任务归档与 TEMPLATE.md；发布前做隐私加固：移除公开仓库所有本机路径、真实数据文件名与真实汇总数值，新增 demo/make_demo_data.R 内置模拟数据生成器，面板适配器默认走模拟数据、--local 才读本机私有配置；中英文 README 补仓库地址、CI 徽章与 clone 快速开始；同步 v0.1 / v0.1.1 GitHub Release；R-CMD-check 首次远端运行通过，Pages 已启用（仅合成数据站点）。" },
-    { date: "2026-11-11 08:15", text: "补充分发通道：v0.1.1 Release 追加 epiCore_0.1.0.tar.gz 资产，其他人可一行 install.packages(URL) 联网安装（零第三方依赖、版本固定）；中英文 README / 包 README 补全联网、本地、离线三种安装方式并去掉本机 R 绝对路径；R 4.6.0 / Windows 实测 URL 安装与 pak 通过、remotes 需 TAR=internal 规避中文文件名转码问题；Release notes 与 CHANGELOG 同步；不新增 tag、不改算法。" }
+    { date: "2026-11-11 08:15", text: "补充分发通道：v0.1.1 Release 追加 epiCore_0.1.0.tar.gz 资产，其他人可一行 install.packages(URL) 联网安装（零第三方依赖、版本固定）；中英文 README / 包 README 补全联网、本地、离线三种安装方式并去掉本机 R 绝对路径；R 4.6.0 / Windows 实测 URL 安装与 pak 通过、remotes 需 TAR=internal 规避中文文件名转码问题；Release notes 与 CHANGELOG 同步；不新增 tag、不改算法。" },
+    { date: "2026-11-13 09:15", text: "提前启动 2026-12：布置 epi-ingest（epiIngest）任务——新建 docs/monthly/2026-12.md（目标与范围控制、W1–W4 与量化验收、接口草案、适配器矩阵、风险预案），ROADMAP 2026-12 状态改为进行中，README 速览、CHANGELOG、看板（B1 转 doing + T13–T16 + 里程碑）同步；本月先布置任务与文档，代码尚未开始。" }
   ],
   note: "本看板只读 kanban_data.js。任务状态变化后改本文件并刷新页面即可，不必改 HTML。数据分析仍在本地执行，原始数据不上传。"
 };
