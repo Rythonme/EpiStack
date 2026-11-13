@@ -26,9 +26,11 @@ ingest_mode <- epi_bootstrap_ingest(file.path(root, "epi-ingest"))
 
 args     <- commandArgs(trailingOnly = TRUE)
 out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
+# 默认写在本脚本所在目录，从仓库根目录调用也不会把产物散落到 cwd
+script_dir <- if (length(f0)) dirname(normalizePath(f0[1L])) else getwd()
 out_html <- if (nzchar(out_env)) file.path(out_env, "端到端演示报告.html") else
             if (length(args) >= 1L && !grepl("^--", args[1L])) args[1L] else
-            file.path(getwd(), "端到端演示报告.html")
+            file.path(script_dir, "端到端演示报告.html")
 out_dir  <- dirname(out_html)
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 cache_dir <- file.path(out_dir, "cache")
