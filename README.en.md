@@ -102,7 +102,7 @@ validate_contract(core)  # TRUE on success
 
 | Function | Purpose |
 |---|---|
-| `read_counts()` | main L0 + L1 entry point, returns an `epi_contract` |
+| `read_counts()` | main reader and contract entry point, returns an `epi_contract` |
 | `validate_contract()` / `epi_contract_check()` | strict / non-strict contract validation |
 | `epi_schema()` | versioned contract definition (mirrors `inst/contract/schema.json`) |
 | `normalize_region()` / `epi_region_codes()` | region normalization and code tables |

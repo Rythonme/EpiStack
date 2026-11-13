@@ -106,7 +106,7 @@ validate_contract(core)  # TRUE 表示通过
 
 | 函数 | 作用 |
 |---|---|
-| `read_counts()` | L0 + L1 主入口，返回 `epi_contract` 对象 |
+| `read_counts()` | 读取与契约主入口，返回 `epi_contract` 对象 |
 | `validate_contract()` / `epi_contract_check()` | 严格 / 非严格契约校验 |
 | `epi_schema()` | 版本化契约定义（与 `inst/contract/schema.json` 同步） |
 | `normalize_region()` / `epi_region_codes()` | 地区编码规范化与码表生成 |

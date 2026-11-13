@@ -1,4 +1,4 @@
-# epiCore · EpiStack 的统一数据契约层（L0 / L1）
+# epiCore · EpiStack 的统一数据契约层（L0）
 
 [![R](https://img.shields.io/badge/R-%3E%3D3.6.0-blue)](https://www.r-project.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](../LICENSE)
@@ -98,7 +98,7 @@ validate_contract(core)    # 严格校验：TRUE 表示通过
 
 | 函数 | 作用 |
 |---|---|
-| `read_counts()` | L0+L1 主入口，返回 `epi_contract` 对象 |
+| `read_counts()` | 读取 + 契约主入口，返回 `epi_contract` 对象（含内置质控） |
 | `validate_contract()` / `epi_contract_check()` | 严格 / 非严格契约校验 |
 | `epi_schema()` | 返回版本化契约定义（与 `inst/contract/schema.json` 同步） |
 | `normalize_region()` / `epi_region_codes()` | 地区编码规范化与码表生成 |
