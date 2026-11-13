@@ -37,6 +37,7 @@ window.KANBAN_DATA = {
     { name: "v1.0 · 全层集成", date: "计划中", state: "" }
   ],
   changelog: [
+    { date: "2026-11-13", text: "仓库整理：面板用例目录改为 case_panel，v1 周报原型移出仓库；链路与基线数值不变。" },
     { date: "2026-11-13", text: "v0.2.0：L1 接入层 epiIngest 发布，主仓链路改用它输出契约，数值与之前一致。" },
     { date: "2026-11-11", text: "v0.1.1：Release 附带源码 tarball，可用一行命令联网安装。" },
     { date: "2026-11-10", text: "v0.1：epiCore 首个版本，六层示例与编排入口跑通。" }
