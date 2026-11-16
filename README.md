@@ -3,7 +3,7 @@
 把原始传染病监测数据，变成可发布的异常预警、空间风险图和健康不平等分析报告。
 纯 R 实现，零第三方依赖，断网可跑。
 
-[English](README.en.md) · 版本 `v0.2.0` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
+[English](README.en.md) · 版本 `v0.3.0` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
 
 [![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -21,7 +21,7 @@
 | L5 | `epiReport` | 单文件 HTML 报告 | 各层结果 → 可转发成果 |
 | L6 | `epiFlow` | 编排与可复现清单 | 全部 → 一键复现 |
 
-已发布 L0（`epiCore`）与 L1（`epiIngest`），其余层按月发布，接口不变。
+已发布 L0（`epiCore`）、L1（`epiIngest`）与 L2（`epiAlert`），其余层按月发布，接口不变。
 
 契约——所有层只认这三样东西：
 
@@ -51,11 +51,17 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest)
+# L2 季节性基线与预警分级
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.3.0/epiAlert_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest); library(epiAlert)
 ```
 
-纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)
-与 [epi-ingest/README.md](epi-ingest/README.md)。
+纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)、
+[epi-ingest/README.md](epi-ingest/README.md) 与 [epi-alert/README.md](epi-alert/README.md)。
 
 ## 快速开始
 
@@ -77,10 +83,11 @@ Rscript pipeline.R --list      # 只看分层计划
 
 ```bash
 Rscript vertical_slice/run_e2e.R      # 六层示例，合成数据
-Rscript case_panel/run_panel.R         # 面板示例，内置模拟数据
+Rscript alert_demo/run_alert.R        # 预警演示：基线 → 分级 → 回溯评估
+Rscript case_panel/run_panel.R        # 面板示例，内置模拟数据
 ```
 
-两条命令都不需要外部数据，clone 下来直接可跑。
+三条命令都不需要外部数据，clone 下来直接可跑。
 
 ## 用 `epiCore` 读自己的数据
 
@@ -146,6 +153,26 @@ core$ingest$n_dropped              # 规则剔除了多少行
 Excel / 数据库 / HTTP 接口 / 栅格协变量走可选适配器，缺包时
 `epi_ingest_capabilities()` 会明确告诉你缺哪个。
 
+## 用 `epiAlert` 做预警
+
+```r
+library(epiAlert)
+
+x <- alert_counts(core)                 # 契约表 → 基线 → 超限 → 分级
+x$alerts                                # 信号清单：日期 / 地区 / 计数 / 上界 / 连续期数 / 级别
+x$summary                               # 按地区：各级条数、最高级别、最后信号
+
+alert_report(x, "预警单.html")           # 单文件报告，可直接发出
+alert_counts(core, assess = "latest")   # 当期监测口径：只评最新周期
+```
+
+基线只用评估期之前的历史（季节窗口取更早年份的同周期），因此回溯评估时本期不会给自己投票。
+四种基线方法（`seasonal` / `pooled` / `moving` / `poisson`）按粒度自动选择，
+`alert_methods()` 列出适用场景。
+
+分级阈值是数据不是代码：`alert_rules(warn_ratio = 2, alarm_ratio = 3)` 改口径，
+`alert_rules_write()` 存成 JSON 随项目版本管理。
+
 ## 数据与隐私
 
 仓库只包含合成数据：`demo/make_demo_data.R` 用固定种子生成 31 个虚构地区（`D01`–`D31`）的面板，不对应任何真实行政区。所有示例和默认链路都只跑这份数据。
@@ -158,7 +185,9 @@ Excel / 数据库 / HTTP 接口 / 栅格协变量走可选适配器，缺包时
 EpiStack/
 ├── epi-core/                  # L0：正式 R 包（源码 / 文档 / 单测 / schema）
 ├── epi-ingest/                # L1：正式 R 包（多源读取 / 质控 / 报告 / 脱敏）
+├── epi-alert/                 # L2：正式 R 包（基线 / 分级 / 汇总 / 预警单）
 ├── ingest_demo/               # L1 演示：合成数据 → 质控单 → 契约等价性
+├── alert_demo/                # L2 演示：注入暴发 → 回溯评估 → 预警单
 ├── demo/                      # 合成数据生成器
 ├── vertical_slice/            # 六层端到端示例
 ├── case_panel/                # 面板用例（默认模拟数据，--local 读本地私有数据）
@@ -174,6 +203,7 @@ EpiStack/
 - [CHANGELOG.md](CHANGELOG.md) —— 变更日志
 - [epi-core/README.md](epi-core/README.md) —— L0 包的使用与安装细节
 - [epi-ingest/README.md](epi-ingest/README.md) —— L1 包的使用与安装细节
+- [epi-alert/README.md](epi-alert/README.md) —— L2 包的使用与安装细节
 
 ## 许可
 

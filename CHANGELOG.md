@@ -2,6 +2,27 @@
 
 遵循[语义化版本](https://semver.org/lang/zh-CN/)。每个包独立版本，发布物同时提供源码 tarball。
 
+## v0.3.0 — 2026-11-16
+
+新增 L2 卫星包 `epiAlert` 0.1.0，并接入主仓链路。
+
+**基线**
+
+- `alert_baseline()` / `alert_counts()`：四种方法——`seasonal`（同季节窗口对数正态上界）、`pooled`（不分季节，年度默认）、`moving`（最近若干期算术均值加 k 倍标准差）、`poisson`（单侧泊松上分位）；默认按时间粒度自动选择。
+- 历史只取评估期之前、且只取更早年份的同期观测，回溯评估时本期不进入自己的基线。
+- `assess` 决定评估范围：`"all"` 逐期回溯（默认）、`"latest"` 只评最新周期、或年份向量。
+
+**分级与输出**
+
+- `alert_rules()` / `alert_rules_read()` / `alert_rules_write()`：连续期数与超出倍数两条线并看，阈值存 JSON 随项目走，校验不合格直接报错。
+- `alert_summary()` 按地区汇总各级条数、最高级别与最大倍数；`alert_report()` 输出控制台、CSV 或单文件 HTML 预警单。
+- `alert_methods()` 列出方法与适用粒度，`alert_example()` 提供确定性合成数据供示例与自检。
+
+**主仓**
+
+- L2 从薄实现改为 `epiAlert`；`vertical_slice/run_e2e.R` 改用 `alert_counts()`，基线、上界、连续期数与级别与旧实现逐行一致，golden 基线未改。
+- 新增 `alert_demo/run_alert.R` 与 `alert_l2` 编排阶段：注入 3 期暴发，回溯与当期各评估一遍，产物进站点。
+
 ## v0.2.0 — 2026-11-13
 
 新增 L1 卫星包 `epiIngest` 0.2.0，并接入主仓链路。

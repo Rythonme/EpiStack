@@ -2,7 +2,7 @@
 
 Turn raw infectious disease surveillance data into aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-[中文说明](README.md) · Version `v0.2.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.md) · Version `v0.3.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## What it is
 
@@ -18,7 +18,7 @@ A layered analysis chain. Each layer does one job, and layers talk to each other
 | L5 | `epiReport` | Single-file HTML reports | layer results → shareable output |
 | L6 | `epiFlow` | Orchestration and manifest | everything → one-command rerun |
 
-L0 (`epiCore`) and L1 (`epiIngest`) are released. The remaining layers ship monthly; their interfaces will not change.
+L0 (`epiCore`), L1 (`epiIngest`) and L2 (`epiAlert`) are released. The remaining layers ship monthly; their interfaces will not change.
 
 The contract — every layer reads and writes only these:
 
@@ -48,10 +48,16 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest)
+# L2 seasonal baselines and alert grading
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.3.0/epiAlert_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest); library(epiAlert)
 ```
 
-Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md) and [epi-ingest/README.md](epi-ingest/README.md).
+Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md), [epi-ingest/README.md](epi-ingest/README.md) and [epi-alert/README.md](epi-alert/README.md).
 
 ## Quickstart
 
@@ -73,10 +79,11 @@ Run one chain on its own (from the repository root):
 
 ```bash
 Rscript vertical_slice/run_e2e.R      # six-layer example, synthetic data
-Rscript case_panel/run_panel.R         # panel example, built-in synthetic data
+Rscript alert_demo/run_alert.R        # alerting demo: baseline → grading → retrospective scan
+Rscript case_panel/run_panel.R        # panel example, built-in synthetic data
 ```
 
-Neither command needs external data.
+None of them needs external data.
 
 ## Reading your own data with `epiCore`
 
@@ -140,6 +147,27 @@ core$ingest$n_dropped              # rows removed by the rules
 
 Rules can be stored as JSON next to your project and reused with `qc_apply(src, "config/qc_rules.json")`. Excel, databases, HTTP endpoints and raster covariates go through optional adapters; `epi_ingest_capabilities()` tells you exactly which ones the current machine can run.
 
+## Alerting with `epiAlert`
+
+```r
+library(epiAlert)
+
+x <- alert_counts(core)                 # contract table → baseline → exceedance → grading
+x$alerts                                # date / region / count / upper / run length / level
+x$summary                               # per region: counts by level, peak level, last signal
+
+alert_report(x, "alerts.html")          # single-file report, ready to forward
+alert_counts(core, assess = "latest")   # operational view: latest period only
+```
+
+Baselines use only history before the period being evaluated (same seasonal window, earlier
+years only), so a retrospective scan never feeds a period into its own baseline. Four methods
+(`seasonal` / `pooled` / `moving` / `poisson`) are picked automatically by granularity;
+`alert_methods()` lists when each applies.
+
+Thresholds are data, not code: `alert_rules(warn_ratio = 2, alarm_ratio = 3)` changes the
+calibration, `alert_rules_write()` stores it as JSON with your project.
+
 ## Data and privacy
 
 The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
@@ -152,7 +180,9 @@ Real surveillance data is never shipped or uploaded. Point an ignored local conf
 EpiStack/
 ├── epi-core/                  # L0: formal R package (source, docs, tests, schema)
 ├── epi-ingest/                # L1: formal R package (readers, QC, reports, masking)
+├── epi-alert/                 # L2: formal R package (baselines, grading, alert sheet)
 ├── ingest_demo/               # L1 demo: synthetic data → QC report → contract check
+├── alert_demo/                # L2 demo: injected outbreak → retrospective scan → alert sheet
 ├── demo/                      # synthetic data generator
 ├── vertical_slice/            # six-layer end-to-end example
 ├── case_panel/                # panel case (synthetic by default, --local for private data)
@@ -167,6 +197,7 @@ EpiStack/
 - [CHANGELOG.md](CHANGELOG.md) — change log
 - [epi-core/README.md](epi-core/README.md) — L0 package usage and install details
 - [epi-ingest/README.md](epi-ingest/README.md) — L1 package usage and install details
+- [epi-alert/README.md](epi-alert/README.md) — L2 package usage and install details
 
 ## License
 
