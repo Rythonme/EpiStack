@@ -6,8 +6,8 @@
 # 用法：Rscript run_e2e.R [输出报告.html]
 # 依赖：base R + 本仓正式包 epi-core（自动安装到 .rlib/，断网时回退源码加载）
 # 数据：内置合成数据（模拟"原始多源面板"），固定随机种子，可完全复现
-# 说明：L0/L1 已替换为 epi-core 正式包函数（read_counts / validate_contract /
-#       epi_adjacency / epi_period）；L2–L6 仍为薄实现，后续逐月替换为卫星仓。
+# 说明：L0 / L1 / L2 已替换为正式包（read_counts / ingest_counts / alert_counts）；
+#       L3–L6 仍为薄实现，后续逐月替换为卫星仓。
 # =============================================================
 
 # ---- 载入正式 epi-core 包 ----
@@ -23,6 +23,8 @@ source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
 source(file.path(root, "bootstrap_ingest.R"), encoding = "UTF-8")
 ingest_mode <- epi_bootstrap_ingest(file.path(root, "epi-ingest"))
+source(file.path(root, "bootstrap_alert.R"), encoding = "UTF-8")
+alert_mode <- epi_bootstrap_alert(file.path(root, "epi-alert"))
 
 args     <- commandArgs(trailingOnly = TRUE)
 out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
@@ -118,51 +120,24 @@ saveRDS(contract, file.path(cache_dir, "L0_contract.rds"))
 mark_stage("L1 epi-ingest", sprintf("ingest_counts() 质控剔除 %d 行（重复 %d / 缺失 %d）；清洁契约表 %d 行；%s",
                                     n_drop, dup_n, na_n, nrow(contract), ingest_mode))
 
-# ---------------- L2 · 监测与预警 ----------------
-cur_year <- max(contract$year)
-hist <- contract[contract$year < cur_year, ]
-current <- contract[contract$year == cur_year, ]
-band <- expand.grid(region = geo$region, period = 1L:N_PERIODS,
-                    stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)
-band$baseline <- NA_real_; band$upper <- NA_real_
-for (i in seq_len(nrow(band))) {
-  w <- wrap_p((band$period[i] - 1L):(band$period[i] + 1L))
-  z <- hist$count[hist$region == band$region[i] & hist$period %in% w]
-  if (length(z) >= 3L) {
-    lz <- log(z + 0.5); mu <- mean(lz); sd <- stats::sd(lz)
-    band$baseline[i] <- exp(mu) - 0.5
-    band$upper[i] <- exp(mu + K_SIGMA * sd) - 0.5
-  }
-}
-cur <- merge(current, band, by = c("region", "period"), all.x = TRUE, sort = FALSE)
-cur <- cur[order(cur$region, cur$date), ]
-cur$exceed <- !is.na(cur$upper) & cur$count > cur$upper
-cur$run_len <- 0L
-for (rg in geo$region) {
-  ix <- which(cur$region == rg)
-  if (!length(ix)) next
-  rr <- rle(cur$exceed[ix]); lens <- integer(length(ix)); pos <- 1L
-  for (j in seq_along(rr$lengths)) {
-    if (rr$values[j]) lens[pos:(pos + rr$lengths[j] - 1L)] <- rr$lengths[j]
-    pos <- pos + rr$lengths[j]
-  }
-  cur$run_len[ix] <- lens
-}
-ratio <- ifelse(!is.na(cur$upper) & cur$upper > 0, cur$count / pmax(cur$upper, 1), 0)
-cur$level <- "正常"
-cur$level[cur$run_len >= 1L] <- "关注"
-cur$level[cur$run_len >= 2L | ratio >= 1.5] <- "预警"
-cur$level[cur$run_len >= 3L | ratio >= 2.0] <- "告警"
-alerts <- cur[cur$level != "正常", c("date", "region", "count", "upper", "run_len", "level")]
-alerts <- alerts[order(match(alerts$level, c("告警", "预警", "关注")), -alerts$count), ]
+# ---------------- L2 · 监测与预警（epiAlert 正式包） ----------------
+# 报表口径是「本期监测」：只评最新周期，历史仅用于建基线。
+# 回溯评估（assess = "all"）由 alert_demo/run_alert.R 单独演示。
+alert_res <- alert_counts(contract, assess = "latest", k = K_SIGMA,
+                          window = 1L, min_obs = 3L)
+band   <- alert_res$band
+cur    <- alert_res$current
+alerts <- alert_res$alerts
 write.csv(alerts, file.path(out_dir, "alerts.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 saveRDS(list(band = band, cur = cur, alerts = alerts), file.path(cache_dir, "L2_alert.rds"))
 n_alert <- sum(cur$level %in% c("预警", "告警"))
-mark_stage("L2 epi-alert", sprintf("季节性基线带 %d 组；评估 %d 期；关注/预警/告警共 %d 条（注入暴发命中 %d 周）",
-                                   nrow(band), nrow(cur), nrow(alerts), sum(cur$region == "地区10" & cur$level == "告警")))
+mark_stage("L2 epi-alert", sprintf("基线 %d 期（不足 %d）；评估 %d 期；关注/预警/告警共 %d 条（注入暴发命中 %d 周，%s）",
+                                   nrow(band), alert_res$meta$n_band_missing, nrow(cur), nrow(alerts),
+                                   sum(cur$region == "地区10" & cur$level == "告警"), alert_mode))
 
 # ---------------- L3 · 空间自相关（epi-core 邻接权重 + Moran's I 置换检验） ----------------
 # W 来自 read_counts() -> epi_adjacency()：行标准化 rook 权重，dimnames 为地区编码
+cur_year <- max(contract$year)
 tot <- aggregate(count ~ region, data = contract[contract$year == cur_year, ], sum)
 tot <- merge(geo[, c("region", "pop")], tot, by = "region", all.x = TRUE)
 tot$count[is.na(tot$count)] <- 0
@@ -332,7 +307,7 @@ body <- sprintf(paste0(
 '空间：4×4 县级格网 rook 邻接、行标准化，Moran\'s I + 999 次置换检验。',
 '不平等：按 SES 升序、人口加权的集中指数 CI = 1 − 2×集中曲线下面积。',
 '本报告为示例演示，阈值与口径需按病种和当地报告制度校准，<b>不可直接作为公共卫生决策依据</b>。</p></section>',
-'<footer>EpiStack · L0 由 epiCore 提供、L1 由 epiIngest 提供 · 单文件离线报告 · L6 manifest 见同目录 run_manifest.json</footer>'),
+'<footer>EpiStack · L0 由 epiCore 提供、L1 由 epiIngest 提供、L2 由 epiAlert 提供 · 单文件离线报告 · L6 manifest 见同目录 run_manifest.json</footer>'),
  esc(format(Sys.time(), "%Y-%m-%d %H:%M")), SEED,
  nrow(contract), n_drop, nrow(alerts), CI,
  stage_cards, qc_rows, svg_series(cur, band), svg_grid(tot, geo), svg_lorenz(cp, cy),

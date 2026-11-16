@@ -47,7 +47,7 @@ EPI_STACK_PLAN <- list(
     list(id = "L1", name = "epi-ingest",  role = "多源读取与质控",
          current_impl = "formal", impl = "epi-ingest/R/*.R", satellite = "epi-ingest",  since = "2026-12"),
     list(id = "L2", name = "epi-alert",   role = "季节性基线带与异常信号",
-         current_impl = "thin",   impl = "vertical_slice / case_panel 内置", satellite = "epi-alert",   since = "2027-01"),
+         current_impl = "formal", impl = "epi-alert/R/*.R", satellite = "epi-alert",   since = "2027-01"),
     list(id = "L3", name = "epi-space",   role = "空间自相关 / BYM2 / 景观格局",
          current_impl = "thin",   impl = "内置 Moran's I 置换检验", satellite = "epi-space",   since = "2027-02"),
     list(id = "L4", name = "epi-ineq",    role = "集中指数 / SII / 可达性",
@@ -80,6 +80,16 @@ EPI_STACK_PLAN <- list(
       report = "质控单.html"
     ),
     list(
+      id = "alert_l2", label = "L2 预警演示：基线 → 分级 → 回溯评估",
+      script = "alert_demo/run_alert.R",
+      layers = c("L0", "L1", "L2"),
+      privacy = "synthetic", requires = character(0),
+      inputs = c("alert_demo/run_alert.R", "demo/make_demo_data.R"),
+      outputs = c("预警单_回溯.html", "alerts_retro.csv", "alert_metrics.json",
+                  "alert_rules.json"),
+      report = "预警单_回溯.html"
+    ),
+    list(
       id = "panel_demo", label = "模拟面板端到端演示（默认）",
       script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
@@ -104,7 +114,8 @@ EPI_STACK_PLAN <- list(
     )
   ),
   shared_inputs = c(
-    "bootstrap_core.R", "bootstrap_ingest.R", "R/pipeline_plan.R", "R/epi_json.R",
+    "bootstrap_core.R", "bootstrap_ingest.R", "bootstrap_alert.R",
+    "R/pipeline_plan.R", "R/epi_json.R",
     "demo/make_demo_data.R",
     "epi-core/DESCRIPTION", "epi-core/NAMESPACE",
     "epi-core/R/contract.R", "epi-core/R/region.R", "epi-core/R/period.R",
@@ -115,6 +126,11 @@ EPI_STACK_PLAN <- list(
     "epi-ingest/R/adapters.R", "epi-ingest/R/read.R", "epi-ingest/R/qc.R",
     "epi-ingest/R/report.R", "epi-ingest/R/lineage.R",
     "epi-ingest/R/desensitize.R", "epi-ingest/R/ingest_counts.R",
-    "epi-ingest/inst/rules/qc_default.json"
+    "epi-ingest/inst/rules/qc_default.json",
+    "epi-alert/DESCRIPTION", "epi-alert/NAMESPACE",
+    "epi-alert/R/utils.R", "epi-alert/R/json.R", "epi-alert/R/rules.R",
+    "epi-alert/R/baseline.R", "epi-alert/R/scan.R", "epi-alert/R/summary.R",
+    "epi-alert/R/report.R", "epi-alert/R/alert_counts.R", "epi-alert/R/example.R",
+    "epi-alert/inst/rules/alert_default.json"
   )
 )

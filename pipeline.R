@@ -121,6 +121,7 @@ build_site <- function(results) {
   copy <- function(from, to) if (file.exists(from))
     file.copy(from, file.path(site, to), overwrite = TRUE)
   copy(file.path(out_root, "vertical_slice", "端到端演示报告.html"), "report.html")
+  copy(file.path(out_root, "alert_l2", "预警单_回溯.html"), "alert-report.html")
   copy(file.path(out_root, "panel_demo", "面板分析报告_模拟.html"), "demo-report.html")
   copy(file.path(root, "项目进展看板.html"), "kanban.html")
   copy(file.path(root, "kanban_data.js"), "kanban_data.js")
@@ -151,6 +152,7 @@ build_site <- function(results) {
     ' ｜ 生成于 ', format(Sys.time(), "%Y-%m-%d %H:%M"), '</p>',
     '<div class="cards">',
     '<a class="card" href="report.html">端到端演示报告<small>合成数据 · 六层链路 · 单文件离线 HTML</small></a>',
+    '<a class="card" href="alert-report.html">预警单（回溯）<small>31 地区月报 · 季节性基线带 · 注入暴发命中</small></a>',
     '<a class="card" href="demo-report.html">模拟面板演示报告<small>31 地区面板 · 预警 / 空间 / 不平等 · 纯合成</small></a>',
     '<a class="card" href="kanban.html">交付看板<small>各层任务、版本里程碑与更新记录</small></a>',
     '</div>',
