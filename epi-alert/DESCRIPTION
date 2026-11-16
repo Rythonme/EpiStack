@@ -1,0 +1,21 @@
+Package: epiAlert
+Type: Package
+Title: Seasonal Baselines and Alert Levels for Surveillance Counts
+Version: 0.1.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Alerting layer (L2) of the EpiStack ecosystem. Builds per-region
+    seasonal baselines from historical counts, flags periods above a one-sided
+    upper bound and grades signals into watch, warning and alarm with
+    consecutive-exceedance and ratio rules. Baselines can be evaluated for the
+    latest period only or retrospectively for every period. Thresholds are data,
+    not code, and can be versioned as a JSON file per project.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+Imports: stats, utils
+Suggests: epiCore
+NeedsCompilation: no
+URL: https://github.com/Rythonme/EpiStack
+BugReports: https://github.com/Rythonme/EpiStack/issues

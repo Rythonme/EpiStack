@@ -1,0 +1,10 @@
+{
+  "format_version": "1",
+  "name": "epiAlert-default",
+  "watch": 1,
+  "warn_run": 2,
+  "warn_ratio": 1.5,
+  "alarm_run": 3,
+  "alarm_ratio": 2,
+  "labels": ["正常", "关注", "预警", "告警"]
+}
