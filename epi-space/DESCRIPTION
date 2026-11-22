@@ -1,0 +1,20 @@
+Package: epiSpace
+Type: Package
+Title: Spatial Autocorrelation and Hotspot Detection for Surveillance Counts
+Version: 0.1.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Spatial layer (L3) of the EpiStack ecosystem. Computes global
+    Moran's I with permutation tests, local indicators of spatial association
+    (LISA) with four quadrant classes, and significantly high/low clusters,
+    using row-standardised adjacency weights from the contract layer. A BYM2
+    template for INLA is emitted as code and data; INLA is not required.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+Imports: stats, utils
+Suggests: epiCore
+NeedsCompilation: no
+URL: https://github.com/Rythonme/EpiStack
+BugReports: https://github.com/Rythonme/EpiStack/issues
