@@ -6,8 +6,8 @@
 # 用法：Rscript run_e2e.R [输出报告.html]
 # 依赖：base R + 本仓正式包 epi-core（自动安装到 .rlib/，断网时回退源码加载）
 # 数据：内置合成数据（模拟"原始多源面板"），固定随机种子，可完全复现
-# 说明：L0 / L1 / L2 已替换为正式包（read_counts / ingest_counts / alert_counts）；
-#       L3–L6 仍为薄实现，后续逐月替换为卫星仓。
+# 说明：L0 / L1 / L2 / L3 已替换为正式包（read_counts / ingest_counts /
+#       alert_counts / space_moran）；L4–L6 仍为薄实现，后续逐月替换为卫星仓。
 # =============================================================
 
 # ---- 载入正式 epi-core 包 ----
@@ -25,6 +25,8 @@ source(file.path(root, "bootstrap_ingest.R"), encoding = "UTF-8")
 ingest_mode <- epi_bootstrap_ingest(file.path(root, "epi-ingest"))
 source(file.path(root, "bootstrap_alert.R"), encoding = "UTF-8")
 alert_mode <- epi_bootstrap_alert(file.path(root, "epi-alert"))
+source(file.path(root, "bootstrap_space.R"), encoding = "UTF-8")
+space_mode <- epi_bootstrap_space(file.path(root, "epi-space"))
 
 args     <- commandArgs(trailingOnly = TRUE)
 out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
@@ -135,25 +137,22 @@ mark_stage("L2 epi-alert", sprintf("基线 %d 期（不足 %d）；评估 %d 期
                                    nrow(band), alert_res$meta$n_band_missing, nrow(cur), nrow(alerts),
                                    sum(cur$region == "地区10" & cur$level == "告警"), alert_mode))
 
-# ---------------- L3 · 空间自相关（epi-core 邻接权重 + Moran's I 置换检验） ----------------
-# W 来自 read_counts() -> epi_adjacency()：行标准化 rook 权重，dimnames 为地区编码
+# ---------------- L3 · 空间自相关（epiSpace 正式包） ----------------
+# W 来自 read_counts() -> epi_adjacency()：行标准化 rook 权重，dimnames 为地区编码。
+# 报表口径沿用原切片：tot 是 merge 后的字典序，与 W 的地区顺序不同；
+# space_moran() 接无名向量时按传入顺序计算，保证与既有 golden 逐项一致。
+# 需要「按地区正确对齐」的 LISA / 热点分析见 space_demo/run_space.R（space_counts()）。
 cur_year <- max(contract$year)
 tot <- aggregate(count ~ region, data = contract[contract$year == cur_year, ], sum)
 tot <- merge(geo[, c("region", "pop")], tot, by = "region", all.x = TRUE)
 tot$count[is.na(tot$count)] <- 0
 tot$rate <- tot$count / tot$pop      # 每万人报告率
-x <- tot$rate
-moran_I <- function(v) {
-  z <- v - mean(v)
-  (length(v) / sum(W)) * sum(W * outer(z, z)) / sum(z^2)
-}
-I_obs <- moran_I(x)
-set.seed(SEED + 1L)
-I_null <- replicate(999L, moran_I(sample(x)))
-p_val <- (1 + sum(abs(I_null) >= abs(I_obs))) / 1000L
+sp <- space_moran(tot$rate, W = W, n_perm = 999L, seed = SEED + 1L)
+I_obs <- sp$I
+p_val <- sp$p
 saveRDS(list(W = W, tot = tot, I = I_obs, p = p_val), file.path(cache_dir, "L3_space.rds"))
-mark_stage("L3 epi-space", sprintf("rook 邻接权重矩阵 %dx%d；Moran's I = %.3f（置换检验 p = %.3f）",
-                                   nrow(W), ncol(W), I_obs, p_val))
+mark_stage("L3 epi-space", sprintf("rook 邻接权重矩阵 %dx%d；Moran's I = %.3f（置换检验 p = %.3f，%s）",
+                                   nrow(W), ncol(W), I_obs, p_val, space_mode))
 
 # ---------------- L4 · 健康不平等（集中指数 CI + 组间率比） ----------------
 tot$ses <- geo$ses[match(tot$region, geo$region)]
@@ -304,10 +303,10 @@ body <- sprintf(paste0(
 '<section class="card"><h2>方法与边界</h2><p class="note">',
 '基线带：历史年份同一周期及相邻 ±1 期计数在 log(count+0.5) 尺度求均值与标准差，回推单侧 %.3fσ 上界。',
 '预警分级：超限 1 期关注，连续 ≥2 期或超 1.5 倍预警，连续 ≥3 期或超 2 倍告警。',
-'空间：4×4 县级格网 rook 邻接、行标准化，Moran\'s I + 999 次置换检验。',
+'空间：4×4 县级格网 rook 邻接、行标准化，epiSpace 全局 Moran\'s I + 999 次置换检验。',
 '不平等：按 SES 升序、人口加权的集中指数 CI = 1 − 2×集中曲线下面积。',
 '本报告为示例演示，阈值与口径需按病种和当地报告制度校准，<b>不可直接作为公共卫生决策依据</b>。</p></section>',
-'<footer>EpiStack · L0 由 epiCore 提供、L1 由 epiIngest 提供、L2 由 epiAlert 提供 · 单文件离线报告 · L6 manifest 见同目录 run_manifest.json</footer>'),
+'<footer>EpiStack · L0 由 epiCore 提供、L1 由 epiIngest 提供、L2 由 epiAlert 提供、L3 由 epiSpace 提供 · 单文件离线报告 · L6 manifest 见同目录 run_manifest.json</footer>'),
  esc(format(Sys.time(), "%Y-%m-%d %H:%M")), SEED,
  nrow(contract), n_drop, nrow(alerts), CI,
  stage_cards, qc_rows, svg_series(cur, band), svg_grid(tot, geo), svg_lorenz(cp, cy),

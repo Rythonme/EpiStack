@@ -48,8 +48,8 @@ EPI_STACK_PLAN <- list(
          current_impl = "formal", impl = "epi-ingest/R/*.R", satellite = "epi-ingest",  since = "2026-12"),
     list(id = "L2", name = "epi-alert",   role = "季节性基线带与异常信号",
          current_impl = "formal", impl = "epi-alert/R/*.R", satellite = "epi-alert",   since = "2027-01"),
-    list(id = "L3", name = "epi-space",   role = "空间自相关 / BYM2 / 景观格局",
-         current_impl = "thin",   impl = "内置 Moran's I 置换检验", satellite = "epi-space",   since = "2027-02"),
+    list(id = "L3", name = "epi-space",   role = "空间自相关 / 热点 / BYM2 模板",
+         current_impl = "formal", impl = "epi-space/R/*.R", satellite = "epi-space",   since = "2027-02"),
     list(id = "L4", name = "epi-ineq",    role = "集中指数 / SII / 可达性",
          current_impl = "thin",   impl = "内置人口加权集中曲线", satellite = "epi-ineq",    since = "2027-04"),
     list(id = "L5", name = "epi-report",  role = "单文件 HTML 报告与看板",
@@ -90,6 +90,16 @@ EPI_STACK_PLAN <- list(
       report = "预警单_回溯.html"
     ),
     list(
+      id = "space_l3", label = "L3 空间演示：全局 Moran → 局部 LISA → 热点",
+      script = "space_demo/run_space.R",
+      layers = c("L0", "L1", "L3"),
+      privacy = "synthetic", requires = character(0),
+      inputs = c("space_demo/run_space.R"),
+      outputs = c("空间分析单.html", "lisa_regions.csv", "space_metrics.json",
+                  "bym2_template.R"),
+      report = "空间分析单.html"
+    ),
+    list(
       id = "panel_demo", label = "模拟面板端到端演示（默认）",
       script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
@@ -114,7 +124,7 @@ EPI_STACK_PLAN <- list(
     )
   ),
   shared_inputs = c(
-    "bootstrap_core.R", "bootstrap_ingest.R", "bootstrap_alert.R",
+    "bootstrap_core.R", "bootstrap_ingest.R", "bootstrap_alert.R", "bootstrap_space.R",
     "R/pipeline_plan.R", "R/epi_json.R",
     "demo/make_demo_data.R",
     "epi-core/DESCRIPTION", "epi-core/NAMESPACE",
@@ -131,6 +141,11 @@ EPI_STACK_PLAN <- list(
     "epi-alert/R/utils.R", "epi-alert/R/json.R", "epi-alert/R/rules.R",
     "epi-alert/R/baseline.R", "epi-alert/R/scan.R", "epi-alert/R/summary.R",
     "epi-alert/R/report.R", "epi-alert/R/alert_counts.R", "epi-alert/R/example.R",
-    "epi-alert/inst/rules/alert_default.json"
+    "epi-alert/inst/rules/alert_default.json",
+    "epi-space/DESCRIPTION", "epi-space/NAMESPACE",
+    "epi-space/R/utils.R", "epi-space/R/weights.R", "epi-space/R/moran.R",
+    "epi-space/R/lisa.R", "epi-space/R/hotspot.R", "epi-space/R/summary.R",
+    "epi-space/R/report.R", "epi-space/R/space_counts.R", "epi-space/R/bym2.R",
+    "epi-space/R/example.R"
   )
 )

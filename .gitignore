@@ -9,6 +9,7 @@ tests/_smoke_out/
 demo/data/
 ingest_demo/output/
 alert_demo/output/
+space_demo/output/
 
 # 运行期缓存与中间结果
 **/cache/
