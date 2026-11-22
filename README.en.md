@@ -2,7 +2,7 @@
 
 Turn raw infectious disease surveillance data into aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-[中文说明](README.md) · Version `v0.3.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.md) · Version `v0.4.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## What it is
 
@@ -18,7 +18,7 @@ A layered analysis chain. Each layer does one job, and layers talk to each other
 | L5 | `epiReport` | Single-file HTML reports | layer results → shareable output |
 | L6 | `epiFlow` | Orchestration and manifest | everything → one-command rerun |
 
-L0 (`epiCore`), L1 (`epiIngest`) and L2 (`epiAlert`) are released. The remaining layers ship monthly; their interfaces will not change.
+L0 (`epiCore`), L1 (`epiIngest`), L2 (`epiAlert`) and L3 (`epiSpace`) are released. The remaining layers ship monthly; their interfaces will not change.
 
 The contract — every layer reads and writes only these:
 
@@ -54,10 +54,16 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest); library(epiAlert)
+# L3 spatial autocorrelation and hotspots
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.4.0/epiSpace_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace)
 ```
 
-Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md), [epi-ingest/README.md](epi-ingest/README.md) and [epi-alert/README.md](epi-alert/README.md).
+Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md), [epi-ingest/README.md](epi-ingest/README.md), [epi-alert/README.md](epi-alert/README.md) and [epi-space/README.md](epi-space/README.md).
 
 ## Quickstart
 
@@ -80,6 +86,7 @@ Run one chain on its own (from the repository root):
 ```bash
 Rscript vertical_slice/run_e2e.R      # six-layer example, synthetic data
 Rscript alert_demo/run_alert.R        # alerting demo: baseline → grading → retrospective scan
+Rscript space_demo/run_space.R        # spatial demo: Moran → LISA → hotspots
 Rscript case_panel/run_panel.R        # panel example, built-in synthetic data
 ```
 
@@ -168,6 +175,28 @@ years only), so a retrospective scan never feeds a period into its own baseline.
 Thresholds are data, not code: `alert_rules(warn_ratio = 2, alarm_ratio = 3)` changes the
 calibration, `alert_rules_write()` stores it as JSON with your project.
 
+## Spatial patterns with `epiSpace`
+
+```r
+library(epiSpace)
+
+x <- space_counts(core)                 # contract + weights → global → local → hotspots
+x$global                                # Moran's I and permutation p-value
+x$hotspots                              # per region: local I, p, HH/LL/HL/LH, category
+space_report(x, "spatial-report.html")  # single-file report, ready to forward
+```
+
+Weights come from the upstream contract; `epiCore::epi_read_graph()` reads an
+adjacency graph exported from real boundaries, and `space_weights(geo, style = "rook")`
+builds one from grid coordinates.
+
+Global Moran uses 999 permutations; local LISA labels a hotspot (HH), coldspot (LL)
+or spatial outlier (HL/LH) only when the permutation p-value is significant.
+Observations are aligned by the region names in the weight matrix — changing the
+neighbourhood definition changes what the result means. For Bayesian modelling,
+`space_bym2_template()` emits INLA data and code; this package does not fit models
+and does not require INLA.
+
 ## Data and privacy
 
 The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
@@ -181,8 +210,10 @@ EpiStack/
 ├── epi-core/                  # L0: formal R package (source, docs, tests, schema)
 ├── epi-ingest/                # L1: formal R package (readers, QC, reports, masking)
 ├── epi-alert/                 # L2: formal R package (baselines, grading, alert sheet)
+├── epi-space/                 # L3: formal R package (Moran / LISA / hotspots / BYM2 template)
 ├── ingest_demo/               # L1 demo: synthetic data → QC report → contract check
 ├── alert_demo/                # L2 demo: injected outbreak → retrospective scan → alert sheet
+├── space_demo/                # L3 demo: injected cluster → hotspot detection → analysis sheet
 ├── demo/                      # synthetic data generator
 ├── vertical_slice/            # six-layer end-to-end example
 ├── case_panel/                # panel case (synthetic by default, --local for private data)
@@ -198,6 +229,7 @@ EpiStack/
 - [epi-core/README.md](epi-core/README.md) — L0 package usage and install details
 - [epi-ingest/README.md](epi-ingest/README.md) — L1 package usage and install details
 - [epi-alert/README.md](epi-alert/README.md) — L2 package usage and install details
+- [epi-space/README.md](epi-space/README.md) — L3 package usage and install details
 
 ## License
 

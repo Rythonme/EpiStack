@@ -6,9 +6,9 @@ window.KANBAN_DATA = {
     name: "EpiStack",
     subtitle: "传染病监测数据的分析链路 · 分层实现，契约统一",
     repo: "github.com/Rythonme/EpiStack（公开 · MIT）",
-    updated: "2026-11-16",
+    updated: "2026-11-22",
     owner: "Rythonme",
-    target: "逐月补全 L3–L6，每层可独立安装"
+    target: "逐月补全 L4–L6，每层可独立安装"
   },
   columns: [
     { id: "todo",    title: "待办",   color: "#718096" },
@@ -24,7 +24,7 @@ window.KANBAN_DATA = {
     { id: "E5", title: "源码包分发", desc: "Release 附带源码 tarball，一行 install.packages(URL) 即可安装，无需 clone 与 Rtools", tag: "发布", week: "v0.1.1", status: "done" },
     { id: "E6", title: "L1 接入层 epiIngest 0.2.0", desc: "多源读取、8 类质控规则、质控单、血缘 JSON、脱敏、可选适配器；16 个导出函数，96 项断言", tag: "发布", week: "v0.2.0", status: "done" },
     { id: "E7", title: "L2 预警层 epiAlert 0.1.0", desc: "四种基线方法、连续超限与倍数分级、按地区汇总、单文件预警单；11 个导出函数，86 项断言", tag: "发布", week: "v0.3.0", status: "done" },
-    { id: "L3", title: "L3 epiSpace", desc: "Moran / LISA / 热点分析，BYM2 与 INLA 模板；先替换切片里的内置置换检验", tag: "空间", week: "下一层", status: "todo" },
+    { id: "E8", title: "L3 空间层 epiSpace 0.1.0", desc: "全局 Moran 置换检验、局部 LISA 四象限、显著热点/冷点、BYM2 模板；11 个导出函数，67 项断言", tag: "发布", week: "v0.4.0", status: "done" },
     { id: "L4", title: "L4 epiIneq", desc: "集中指数、SII、分解，以及医疗可达性分析", tag: "不平等", week: "计划", status: "backlog" },
     { id: "L5", title: "L5 epiReport", desc: "多层结果汇编、报告脱敏开关、交互看板", tag: "报告", week: "计划", status: "backlog" },
     { id: "L6", title: "L6 epiFlow", desc: "全流水线编排、增量重跑、定时调度", tag: "编排", week: "计划", status: "backlog" }
@@ -34,9 +34,11 @@ window.KANBAN_DATA = {
     { name: "v0.1.1 · 安装渠道", date: "2026-11-11", state: "done" },
     { name: "v0.2.0 · epiIngest", date: "2026-11-13", state: "done" },
     { name: "v0.3 · epiAlert", date: "2026-11-16", state: "done" },
+    { name: "v0.4 · epiSpace", date: "2026-11-22", state: "done" },
     { name: "v1.0 · 全层集成", date: "计划中", state: "" }
   ],
   changelog: [
+    { date: "2026-11-22", text: "v0.4.0：L3 空间层 epiSpace 发布，切片改用 space_moran()，Moran 的数值与 p 值不变，golden 37 项全过。" },
     { date: "2026-11-16", text: "v0.3.0：L2 预警层 epiAlert 发布，切片改用 alert_counts()，基线、上界与 56 条信号的级别与之前逐行一致。" },
     { date: "2026-11-13", text: "仓库整理：面板用例目录改为 case_panel，v1 周报原型移出仓库；链路与基线数值不变。" },
     { date: "2026-11-13", text: "v0.2.0：L1 接入层 epiIngest 发布，主仓链路改用它输出契约，数值与之前一致。" },

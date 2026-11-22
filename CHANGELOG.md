@@ -2,6 +2,25 @@
 
 遵循[语义化版本](https://semver.org/lang/zh-CN/)。每个包独立版本，发布物同时提供源码 tarball。
 
+## v0.4.0 — 2026-11-22
+
+新增 L3 卫星包 `epiSpace` 0.1.0，并接入主仓链路。
+
+**空间统计**
+
+- `space_moran()`：全局 Moran's I 与双侧置换检验，`I = (n/S0)·Σw_ij z_i z_j / Σz_i²`；给定 seed 可逐位复现。
+- `space_lisa()` / `space_hotspot()`：逐地区局部 I 与置换 p，按 HH / LL / HL / LH 分象限；只有显著时才标注热点、冷点或空间离群。
+- `space_weights()` / `space_neighbors()`：校验权重的结构对称、无自环、无孤立地区，或从格网坐标构造 rook / queen 权重；行标准化后数值不对称属正常。
+- `space_counts()` 一站式入口：权重校验 → 全局 → 局部 → 热点 → 摘要；观测值按权重矩阵的地区名对齐。
+- `space_bym2_template()`：产出 BYM2 的数据清单、INLA 邻接图代码与模型模板，INLA 列为 Suggests，本包不拟合、不写文件。
+- 输出：控制台摘要、CSV（逐地区 + 摘要）、单文件 HTML 分析单。
+
+**主仓**
+
+- L3 从薄实现改为 `epiSpace`；`vertical_slice/run_e2e.R` 用 `space_moran()` 取代手写 Moran，Moran's I 与 p 值与旧实现逐项一致，golden 37 项未改。
+- 新增 `space_demo/run_space.R` 与 `space_l3` 编排阶段：4×4 合成格网注入角落聚集，热点识别命中且全部落在注入区域。
+- CI 增加 epiSpace 的 build / check / 单测；站点新增空间分析单入口。
+
 ## v0.3.0 — 2026-11-16
 
 新增 L2 卫星包 `epiAlert` 0.1.0，并接入主仓链路。
