@@ -3,7 +3,7 @@
 把原始传染病监测数据，变成可发布的异常预警、空间风险图和健康不平等分析报告。
 纯 R 实现，零第三方依赖，断网可跑。
 
-[English](README.en.md) · 版本 `v0.4.0` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
+[English](README.en.md) · 版本 `v0.4.1` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
 
 [![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -41,13 +41,13 @@ W
 ```r
 # L0 契约与读取
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.2/epiCore_0.1.1.tar.gz",
   repos = NULL, type = "source"
 )
 
 # L1 多源接入与质控
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.1/epiIngest_0.2.1.tar.gz",
   repos = NULL, type = "source"
 )
 

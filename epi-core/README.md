@@ -28,22 +28,22 @@ Release 附带构建好的源码 tarball，直接把 URL 交给 `install.package
 
 ```r
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.2/epiCore_0.1.1.tar.gz",
   repos = NULL, type = "source"
 )
 library(epiCore)
 ```
 
-纯 base R、无编译代码，Windows 不需要 Rtools。URL 里的 `v0.1.1` 固定了版本，写进分析脚本便于复现。
-0.1.0 共 16 个导出函数，契约版本 0.1.0。
+纯 base R、无编译代码，Windows 不需要 Rtools。URL 里的 `v0.1.2` 固定了版本，写进分析脚本便于复现。
+0.1.1 共 16 个导出函数，契约版本仍为 0.1.0。
 
 想跟开发分支、指定 tag 或提交，用 `remotes` / `pak`：
 
 ```r
-remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.1")
+remotes::install_github("Rythonme/EpiStack", subdir = "epi-core", ref = "v0.1.2")
 
 # pak：自带解压器，不受下面的 tar 问题影响
-pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.1")
+pak::pkg_install("github::Rythonme/EpiStack/epi-core@v0.1.2")
 ```
 
 > **Windows 注意**：仓库内存在中文命名的示例文件，`remotes` 默认调用的外部 `tar.exe`
@@ -150,4 +150,4 @@ Rscript tests/test_epi_core.R
 
 ---
 
-*EpiStack v0.1.0 · 2026-11-10 · MIT*
+*EpiStack v0.1.1 · 2026-11-22 · MIT*

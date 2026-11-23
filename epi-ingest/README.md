@@ -12,12 +12,12 @@ EpiStack 体系的 **L1 层**：把「数据怎么进来」这件事做扎实。
 ```r
 # 需要 epiCore 生成契约（可选，只读 + 质控不需要）
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.2/epiCore_0.1.1.tar.gz",
   repos = NULL, type = "source"
 )
 
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.1/epiIngest_0.2.1.tar.gz",
   repos = NULL, type = "source"
 )
 library(epiIngest)

@@ -2,7 +2,7 @@
 
 Turn raw infectious disease surveillance data into aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-[中文说明](README.md) · Version `v0.4.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.md) · Version `v0.4.1` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## What it is
 
@@ -38,13 +38,13 @@ W
 ```r
 # L0 contract and readers
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.1/epiCore_0.1.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.1.2/epiCore_0.1.1.tar.gz",
   repos = NULL, type = "source"
 )
 
 # L1 multi-source ingestion and QC
 install.packages(
-  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.0/epiIngest_0.2.0.tar.gz",
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.2.1/epiIngest_0.2.1.tar.gz",
   repos = NULL, type = "source"
 )
 

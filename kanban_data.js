@@ -35,9 +35,11 @@ window.KANBAN_DATA = {
     { name: "v0.2.0 · epiIngest", date: "2026-11-13", state: "done" },
     { name: "v0.3 · epiAlert", date: "2026-11-16", state: "done" },
     { name: "v0.4 · epiSpace", date: "2026-11-22", state: "done" },
+    { name: "v0.4.1 · 发布物清理", date: "2026-11-22", state: "done" },
     { name: "v1.0 · 全层集成", date: "计划中", state: "" }
   ],
   changelog: [
+    { date: "2026-11-22", text: "v0.4.1：示例病种代码统一为 DEMO，epiCore 0.1.1 与 epiIngest 0.2.1 重发，旧 tarball 资产移除。" },
     { date: "2026-11-22", text: "v0.4.0：L3 空间层 epiSpace 发布，切片改用 space_moran()，Moran 的数值与 p 值不变，golden 37 项全过。" },
     { date: "2026-11-16", text: "v0.3.0：L2 预警层 epiAlert 发布，切片改用 alert_counts()，基线、上界与 56 条信号的级别与之前逐行一致。" },
     { date: "2026-11-13", text: "仓库整理：面板用例目录改为 case_panel，v1 周报原型移出仓库；链路与基线数值不变。" },
