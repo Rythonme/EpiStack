@@ -51,7 +51,7 @@ EPI_STACK_PLAN <- list(
     list(id = "L3", name = "epi-space",   role = "空间自相关 / 热点 / BYM2 模板",
          current_impl = "formal", impl = "epi-space/R/*.R", satellite = "epi-space",   since = "2027-02"),
     list(id = "L4", name = "epi-ineq",    role = "集中指数 / SII / 可达性",
-         current_impl = "thin",   impl = "内置人口加权集中曲线", satellite = "epi-ineq",    since = "2027-04"),
+         current_impl = "formal", impl = "epi-ineq/R/*.R", satellite = "epi-ineq",    since = "2027-04"),
     list(id = "L5", name = "epi-report",  role = "单文件 HTML 报告与看板",
          current_impl = "thin",   impl = "手写内联 SVG，零 pandoc", satellite = "epi-report",  since = "2027-06"),
     list(id = "L6", name = "epi-flow",    role = "编排 / 缓存 / 可复现清单",
@@ -100,6 +100,16 @@ EPI_STACK_PLAN <- list(
       report = "空间分析单.html"
     ),
     list(
+      id = "ineq_l4", label = "L4 不平等演示：集中曲线/CI → SII → 分解 → 可达性",
+      script = "ineq_demo/run_ineq.R",
+      layers = c("L0", "L4"),
+      privacy = "synthetic", requires = character(0),
+      inputs = c("ineq_demo/run_ineq.R"),
+      outputs = c("不平等分析单.html", "ineq_metrics.json", "ineq_groups.csv",
+                  "ineq_methods.csv"),
+      report = "不平等分析单.html"
+    ),
+    list(
       id = "panel_demo", label = "模拟面板端到端演示（默认）",
       script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
@@ -125,6 +135,7 @@ EPI_STACK_PLAN <- list(
   ),
   shared_inputs = c(
     "bootstrap_core.R", "bootstrap_ingest.R", "bootstrap_alert.R", "bootstrap_space.R",
+    "bootstrap_ineq.R",
     "R/pipeline_plan.R", "R/epi_json.R",
     "demo/make_demo_data.R",
     "epi-core/DESCRIPTION", "epi-core/NAMESPACE",
@@ -146,6 +157,11 @@ EPI_STACK_PLAN <- list(
     "epi-space/R/utils.R", "epi-space/R/weights.R", "epi-space/R/moran.R",
     "epi-space/R/lisa.R", "epi-space/R/hotspot.R", "epi-space/R/summary.R",
     "epi-space/R/report.R", "epi-space/R/space_counts.R", "epi-space/R/bym2.R",
-    "epi-space/R/example.R"
+    "epi-space/R/example.R",
+    "epi-ineq/DESCRIPTION", "epi-ineq/NAMESPACE",
+    "epi-ineq/R/utils.R", "epi-ineq/R/curve.R", "epi-ineq/R/sii.R",
+    "epi-ineq/R/groups.R", "epi-ineq/R/decompose.R", "epi-ineq/R/access.R",
+    "epi-ineq/R/summary.R", "epi-ineq/R/counts.R", "epi-ineq/R/report.R",
+    "epi-ineq/R/example.R"
   )
 )

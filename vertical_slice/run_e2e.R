@@ -6,8 +6,8 @@
 # 用法：Rscript run_e2e.R [输出报告.html]
 # 依赖：base R + 本仓正式包 epi-core（自动安装到 .rlib/，断网时回退源码加载）
 # 数据：内置合成数据（模拟"原始多源面板"），固定随机种子，可完全复现
-# 说明：L0 / L1 / L2 / L3 已替换为正式包（read_counts / ingest_counts /
-#       alert_counts / space_moran）；L4–L6 仍为薄实现，后续逐月替换为卫星仓。
+# 说明：L0 / L1 / L2 / L3 / L4 已替换为正式包（read_counts / ingest_counts /
+#       alert_counts / space_moran / ineq_counts）；L5–L6 仍为薄实现，后续逐月替换。
 # =============================================================
 
 # ---- 载入正式 epi-core 包 ----
@@ -27,6 +27,8 @@ source(file.path(root, "bootstrap_alert.R"), encoding = "UTF-8")
 alert_mode <- epi_bootstrap_alert(file.path(root, "epi-alert"))
 source(file.path(root, "bootstrap_space.R"), encoding = "UTF-8")
 space_mode <- epi_bootstrap_space(file.path(root, "epi-space"))
+source(file.path(root, "bootstrap_ineq.R"), encoding = "UTF-8")
+ineq_mode <- epi_bootstrap_ineq(file.path(root, "epi-ineq"))
 
 args     <- commandArgs(trailingOnly = TRUE)
 out_env  <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
@@ -154,18 +156,20 @@ saveRDS(list(W = W, tot = tot, I = I_obs, p = p_val), file.path(cache_dir, "L3_s
 mark_stage("L3 epi-space", sprintf("rook 邻接权重矩阵 %dx%d；Moran's I = %.3f（置换检验 p = %.3f，%s）",
                                    nrow(W), ncol(W), I_obs, p_val, space_mode))
 
-# ---------------- L4 · 健康不平等（集中指数 CI + 组间率比） ----------------
+# ---------------- L4 · 健康不平等（epiIneq 正式包） ----------------
+# 与薄实现同口径：SES 升序、人口加权集中曲线；CI = 1 - 2×面积；cut = 0.5 二分组。
+# 新包返回逐位相同的 CI 与率比（已用固定种子缓存验证 diff = 0），顺带给出
+# SII / Gini / 分解 / 可达性，供独立演示与后续分析使用。
 tot$ses <- geo$ses[match(tot$region, geo$region)]
-o <- order(tot$ses)
-p <- tot$pop[o]; y <- tot$count[o]
-cp <- c(0, cumsum(p) / sum(p)); cy <- c(0, cumsum(y) / sum(y))
-area <- sum((cp[-1] - cp[-length(cp)]) * (cy[-1] + cy[-length(cy)]) / 2)
-CI <- 1 - 2 * area                    # 负值 = 负担集中于低 SES 地区
-rate_low  <- sum(tot$count[tot$ses < 0.5]) / sum(tot$pop[tot$ses < 0.5])
-rate_high <- sum(tot$count[tot$ses >= 0.5]) / sum(tot$pop[tot$ses >= 0.5])
-rate_ratio <- rate_low / rate_high
-saveRDS(list(CI = CI, cp = cp, cy = cy, ratio = rate_ratio), file.path(cache_dir, "L4_ineq.rds"))
-mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 SES 地区报告率比 = %.2f", CI, rate_ratio))
+ineq_res <- ineq_counts(tot, population = "pop", value = "count", cut = 0.5)
+CI <- ineq_res$ci
+rate_ratio <- ineq_res$core$rate_ratio
+cv <- ineq_res$curve$curve
+cp <- c(0, cv$cum_pop); cy <- c(0, cv$cum_value)  # 补齐原点供洛伦兹曲线绘制
+saveRDS(list(CI = CI, cp = cp, cy = cy, ratio = rate_ratio, ineq = ineq_res),
+        file.path(cache_dir, "L4_ineq.rds"))
+mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 SES 地区报告率比 = %.2f（SII %.1f，Gini %.3f，%s）",
+                                  CI, rate_ratio, ineq_res$core$SII, ineq_res$gini, ineq_mode))
 
 # ---------------- L5 · 综合 HTML 报告（内联 SVG） ----------------
 svg_series <- function(d, b) {

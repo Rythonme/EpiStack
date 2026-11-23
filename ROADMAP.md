@@ -10,11 +10,11 @@ EpiStack 按层交付：每个月把一层从薄实现换成独立 R 包，层�
 | L1 | `epiIngest` | 已发布 | 多源读取、规则化质控、质控单、血统、脱敏、适配器 | [`v0.2.0`](https://github.com/Rythonme/EpiStack/releases/tag/v0.2.0) |
 | L2 | `epiAlert` | 已发布 | 季节性基线、异常信号、阈值配置 | [`v0.3.0`](https://github.com/Rythonme/EpiStack/releases/tag/v0.3.0) |
 | L3 | `epiSpace` | 已发布 | Moran / LISA / 热点、BYM2 模板 | [`v0.4.0`](https://github.com/Rythonme/EpiStack/releases/tag/v0.4.0) |
-| L4 | `epiIneq` | 计划 | 集中指数 / SII / 分解、可达性 | — |
+| L4 | `epiIneq` | 已发布 | 集中指数 / SII / 分解、可达性 | [`v0.5.0`](https://github.com/Rythonme/EpiStack/releases/tag/v0.5.0) |
 | L5 | `epiReport` | 计划 | 报告汇编、脱敏开关、交互看板 | — |
 | L6 | `epiFlow` | 计划 | 全流水线编排、增量重跑、定时调度 | — |
 
-L4–L6 目前由 `vertical_slice/run_e2e.R` 中的薄实现承担，接口与将来的正式包一致，换实现时下游不用改。
+L5–L6 目前由 `vertical_slice/run_e2e.R` 中的薄实现承担，接口与将来的正式包一致，换实现时下游不用改。
 
 ## 版本约定
 

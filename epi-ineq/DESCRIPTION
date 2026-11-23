@@ -1,0 +1,21 @@
+Package: epiIneq
+Type: Package
+Title: Health Inequity Measurement for Surveillance Counts
+Version: 0.1.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Inequity layer (L4) of the EpiStack ecosystem. Computes
+    population-weighted concentration curves and concentration indices,
+    slope indices of inequality by weighted regression, SES-group
+    decomposition with rate differences, rate ratios and avoided fractions,
+    and distance-decay spatial accessibility from coordinates and facilities.
+    All statistics run in base R; no spatial or inequality packages required.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+Imports: stats, utils
+Suggests: epiCore
+NeedsCompilation: no
+URL: https://github.com/Rythonme/EpiStack
+BugReports: https://github.com/Rythonme/EpiStack/issues

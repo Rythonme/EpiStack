@@ -36,6 +36,8 @@ root <- Sys.getenv("EPISTACK_PROJECT_ROOT", unset = "")
 if (!nzchar(root)) root <- dirname(here)
 source(file.path(root, "bootstrap_core.R"), encoding = "UTF-8")
 core_mode <- epi_bootstrap_core(file.path(root, "epi-core"))
+source(file.path(root, "bootstrap_ineq.R"), encoding = "UTF-8")
+ineq_mode <- epi_bootstrap_ineq(file.path(root, "epi-ineq"))
 
 out_env <- Sys.getenv("EPISTACK_OUT_DIR", unset = "")
 out_dir <- if (nzchar(out_env)) out_env else file.path(here, "output")
@@ -276,25 +278,24 @@ saveRDS(list(W = W, tot = tot, I = I_obs, p = p_val, I_cum = I_cum, p_cum = p_cu
 mark_stage("L3 epi-space", sprintf("邻接 %dx%d；单年 Moran's I = %.3f (p = %.3f)，多年累积 I = %.3f (p = %.3f)",
                                    nrow(W), ncol(W), I_obs, p_val, I_cum, p_cum))
 
-# ---------------- L4 · 健康不平等（面板 SES） ----------------
+# ---------------- L4 · 健康不平等（epiIneq 正式包，面板 SES） ----------------
+# 与薄实现同口径：SES 升序人口加权 CI；率比按 SES 中位数二分（cut = "median"）。
+# 已用面板模拟缓存验证 CI 与率比逐位一致；新包额外给出 SII / Gini / 分解 / 可达性。
 tot$ses <- geo$ses[match(tot$region, geo$region)]
-o <- order(tot$ses)
-p <- tot$pop[o]; y <- tot$count[o]
-cp <- c(0, cumsum(p) / sum(p)); cy <- c(0, cumsum(y) / sum(y))
-area <- sum((cp[-1] - cp[-length(cp)]) * (cy[-1] + cy[-length(cy)]) / 2)
-CI <- 1 - 2 * area
-low <- tot$ses < stats::median(tot$ses, na.rm = TRUE)
-rate_low  <- sum(tot$count[low])  / sum(tot$pop[low])  * 1e5
-rate_high <- sum(tot$count[!low]) / sum(tot$pop[!low]) * 1e5
-rate_ratio <- rate_low / rate_high
+ineq_res <- ineq_counts(tot, population = "pop", value = "count", cut = "median")
+CI <- ineq_res$ci
+rate_ratio <- ineq_res$core$rate_ratio
+cv <- ineq_res$curve$curve
+cp <- c(0, cv$cum_pop); cy <- c(0, cv$cum_value)
 top_i <- which.max(tot$rate)
 top_region <- tot$region[top_i]
 top_share <- tot$count[top_i] / sum(tot$count)
 saveRDS(list(CI = CI, cp = cp, cy = cy, ratio = rate_ratio,
-             top_region = top_region, top_share = top_share),
+             top_region = top_region, top_share = top_share, ineq = ineq_res),
         file.path(cache_dir, "L4_ineq.rds"))
-mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 GDP 组率比 %.2f；%s 占全样本病例 %.1f%%（率 %.2f/10万）",
-                                  CI, rate_ratio, top_region, 100 * top_share, tot$rate[top_i]))
+mark_stage("L4 epi-ineq", sprintf("集中指数 CI = %.3f；低/高 GDP 组率比 %.2f；%s 占全样本病例 %.1f%%（率 %.2f/10万；%s）",
+                                  CI, rate_ratio, top_region, 100 * top_share,
+                                  tot$rate[top_i], ineq_mode))
 
 # ---------------- L5 · 单文件 HTML 报告 ----------------
 css <- paste0(

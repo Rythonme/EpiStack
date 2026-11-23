@@ -3,7 +3,7 @@
 把原始传染病监测数据，变成可发布的异常预警、空间风险图和健康不平等分析报告。
 纯 R 实现，零第三方依赖，断网可跑。
 
-[English](README.en.md) · 版本 `v0.4.1` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
+[English](README.en.md) · 版本 `v0.5.0` · [更新日志](CHANGELOG.md) · [路线图](ROADMAP.md)
 
 [![R-CMD-check](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Rythonme/EpiStack/actions/workflows/R-CMD-check.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -21,7 +21,7 @@
 | L5 | `epiReport` | 单文件 HTML 报告 | 各层结果 → 可转发成果 |
 | L6 | `epiFlow` | 编排与可复现清单 | 全部 → 一键复现 |
 
-已发布 L0（`epiCore`）、L1（`epiIngest`）、L2（`epiAlert`）与 L3（`epiSpace`），其余层按月发布，接口不变。
+已发布 L0（`epiCore`）、L1（`epiIngest`）、L2（`epiAlert`）、L3（`epiSpace`）与 L4（`epiIneq`），其余层按月发布，接口不变。
 
 契约——所有层只认这三样东西：
 
@@ -63,11 +63,18 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace)
+# L4 集中指数 / SII / 分解 / 可达性
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.5.0/epiIneq_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace); library(epiIneq)
 ```
 
 纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)、
-[epi-ingest/README.md](epi-ingest/README.md)、[epi-alert/README.md](epi-alert/README.md) 与 [epi-space/README.md](epi-space/README.md)。
+[epi-ingest/README.md](epi-ingest/README.md)、[epi-alert/README.md](epi-alert/README.md)、
+[epi-space/README.md](epi-space/README.md) 与 [epi-ineq/README.md](epi-ineq/README.md)。
 
 ## 快速开始
 
@@ -199,6 +206,23 @@ space_report(x, "空间分析单.html")       # 单文件报告，可直接发�
 就要重新解释结果。需要贝叶斯模型时，`space_bym2_template()` 产出 INLA 的
 数据与代码模板，本包不拟合、也不要求装 INLA。
 
+## 用 `epiIneq` 看健康不平等
+
+```r
+library(epiIneq)
+
+d <- ineq_example()                  # 4×4 虚构格网，SES 左低右高
+x <- ineq_counts(d)                  # 曲线 → CI → SII → 分解 → 可达性
+x$summary                            # 七项指标与解释
+x$groups                             # 低/高 SES 两组的率与份额
+x$decompose                          # 组间 / 组内 / 余量
+ineq_report(x, "不平等分析单.html")   # 单文件报告
+```
+
+CI = 1 − 2×人口加权集中曲线下面积，负值表示负担偏向低 SES；SII 是两端预测率差。
+CI、SII、率比方向一致才算证据。SES 与坐标从上游 `core$geo` 自动匹配；
+没有坐标时跳过可达性，其余指标照常给出。`ineq_methods()` 列出各方法适用范围。
+
 ## 数据与隐私
 
 仓库只包含合成数据：`demo/make_demo_data.R` 用固定种子生成 31 个虚构地区（`D01`–`D31`）的面板，不对应任何真实行政区。所有示例和默认链路都只跑这份数据。
@@ -213,9 +237,11 @@ EpiStack/
 ├── epi-ingest/                # L1：正式 R 包（多源读取 / 质控 / 报告 / 脱敏）
 ├── epi-alert/                 # L2：正式 R 包（基线 / 分级 / 汇总 / 预警单）
 ├── epi-space/                 # L3：正式 R 包（Moran / LISA / 热点 / BYM2 模板）
+├── epi-ineq/                  # L4：正式 R 包（集中曲线 / CI / SII / 分解 / 可达性）
 ├── ingest_demo/               # L1 演示：合成数据 → 质控单 → 契约等价性
 ├── alert_demo/                # L2 演示：注入暴发 → 回溯评估 → 预警单
 ├── space_demo/                # L3 演示：注入角落聚集 → 热点识别 → 分析单
+├── ineq_demo/                 # L4 演示：弱势负担格网 → CI/SII → 分解 → 可达性
 ├── demo/                      # 合成数据生成器
 ├── vertical_slice/            # 六层端到端示例
 ├── case_panel/                # 面板用例（默认模拟数据，--local 读本地私有数据）
@@ -233,6 +259,7 @@ EpiStack/
 - [epi-ingest/README.md](epi-ingest/README.md) —— L1 包的使用与安装细节
 - [epi-alert/README.md](epi-alert/README.md) —— L2 包的使用与安装细节
 - [epi-space/README.md](epi-space/README.md) —— L3 包的使用与安装细节
+- [epi-ineq/README.md](epi-ineq/README.md) —— L4 包的使用与安装细节
 
 ## 许可
 

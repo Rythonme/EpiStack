@@ -2,7 +2,7 @@
 
 Turn raw infectious disease surveillance data into aberration alerts, spatial risk maps and health-inequality reports. Pure R, no third-party dependencies, runs offline.
 
-[中文说明](README.md) · Version `v0.4.1` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[中文说明](README.md) · Version `v0.5.0` · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## What it is
 
@@ -18,7 +18,7 @@ A layered analysis chain. Each layer does one job, and layers talk to each other
 | L5 | `epiReport` | Single-file HTML reports | layer results → shareable output |
 | L6 | `epiFlow` | Orchestration and manifest | everything → one-command rerun |
 
-L0 (`epiCore`), L1 (`epiIngest`), L2 (`epiAlert`) and L3 (`epiSpace`) are released. The remaining layers ship monthly; their interfaces will not change.
+L0 (`epiCore`), L1 (`epiIngest`), L2 (`epiAlert`), L3 (`epiSpace`) and L4 (`epiIneq`) are released. The remaining layers ship monthly; their interfaces will not change.
 
 The contract — every layer reads and writes only these:
 
@@ -60,10 +60,16 @@ install.packages(
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace)
+# L4 concentration index / SII / decomposition / accessibility
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.5.0/epiIneq_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
+library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace); library(epiIneq)
 ```
 
-Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md), [epi-ingest/README.md](epi-ingest/README.md), [epi-alert/README.md](epi-alert/README.md) and [epi-space/README.md](epi-space/README.md).
+Plain R, no compiler or Rtools needed. For the development version see [epi-core/README.md](epi-core/README.md), [epi-ingest/README.md](epi-ingest/README.md), [epi-alert/README.md](epi-alert/README.md), [epi-space/README.md](epi-space/README.md) and [epi-ineq/README.md](epi-ineq/README.md).
 
 ## Quickstart
 
@@ -197,6 +203,26 @@ neighbourhood definition changes what the result means. For Bayesian modelling,
 `space_bym2_template()` emits INLA data and code; this package does not fit models
 and does not require INLA.
 
+## Health inequality with `epiIneq`
+
+```r
+library(epiIneq)
+
+d <- ineq_example()                  # 4×4 fictional grid, SES low→high
+x <- ineq_counts(d)                  # curve → CI → SII → decomposition → accessibility
+x$summary                            # seven metrics and how to read them
+x$groups                             # low/high SES rates and shares
+x$decompose                          # between / within / residual
+ineq_report(x, "inequality-report.html")
+```
+
+CI = 1 − 2×(population-weighted concentration area); negative means the burden
+falls on low-SES regions. SII is the predicted rate difference between the two ends.
+CI, SII and the rate ratio must agree in direction before calling it evidence.
+SES and coordinates are matched from the upstream `core$geo`; without coordinates
+accessibility is skipped and the other metrics still compute. `ineq_methods()` lists
+where each method applies.
+
 ## Data and privacy
 
 The repository contains synthetic data only: `demo/make_demo_data.R` generates a fixed-seed panel of 31 fictional regions (`D01`–`D31`). Every example and default run uses it.
@@ -211,9 +237,11 @@ EpiStack/
 ├── epi-ingest/                # L1: formal R package (readers, QC, reports, masking)
 ├── epi-alert/                 # L2: formal R package (baselines, grading, alert sheet)
 ├── epi-space/                 # L3: formal R package (Moran / LISA / hotspots / BYM2 template)
+├── epi-ineq/                  # L4: formal R package (curve / CI / SII / decomposition / access)
 ├── ingest_demo/               # L1 demo: synthetic data → QC report → contract check
 ├── alert_demo/                # L2 demo: injected outbreak → retrospective scan → alert sheet
 ├── space_demo/                # L3 demo: injected cluster → hotspot detection → analysis sheet
+├── ineq_demo/                 # L4 demo: disadvantaged grid → CI/SII → decomposition → access
 ├── demo/                      # synthetic data generator
 ├── vertical_slice/            # six-layer end-to-end example
 ├── case_panel/                # panel case (synthetic by default, --local for private data)
@@ -230,6 +258,7 @@ EpiStack/
 - [epi-ingest/README.md](epi-ingest/README.md) — L1 package usage and install details
 - [epi-alert/README.md](epi-alert/README.md) — L2 package usage and install details
 - [epi-space/README.md](epi-space/README.md) — L3 package usage and install details
+- [epi-ineq/README.md](epi-ineq/README.md) — L4 package usage and install details
 
 ## License
 

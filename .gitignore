@@ -10,6 +10,11 @@ demo/data/
 ingest_demo/output/
 alert_demo/output/
 space_demo/output/
+ineq_demo/output/
+
+# R CMD check 中间目录与构建产物（tarball 由 Release 承载，不入库）
+*.Rcheck/
+*.tar.gz
 
 # 运行期缓存与中间结果
 **/cache/

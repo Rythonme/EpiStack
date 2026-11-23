@@ -2,6 +2,25 @@
 
 遵循[语义化版本](https://semver.org/lang/zh-CN/)。每个包独立版本，发布物同时提供源码 tarball。
 
+## v0.5.0 — 2026-11-23
+
+新增 L4 卫星包 `epiIneq` 0.1.0，并接入主仓链路。
+
+**健康不平等**
+
+- `ineq_counts()`：一站式入口，契约表 + SES → 集中曲线 / CI → SII → Gini → 分组分解 → 距离衰减可达性 → 七项指标摘要。
+- `ineq_ci()` / `ineq_curve()`：人口加权集中曲线，CI = 1 − 2×曲线下面积（梯形法），负值表示负担集中于低 SES；手算可逐位复算。
+- `ineq_sii()`：SES 人口累积中点位置对率做人口加权回归，斜率即两端预测率差，附标准误与置换无关的 p 值。
+- `ineq_groups()` / `ineq_decompose()`：数值阈值或中位数二分、分位数分组；组间 / 组内 / 余量单列，率差、率比与可避免分值同出。
+- `ineq_access()`：设施点距离衰减可达性，坐标单位由调用方决定；无坐标时跳过，其余指标照常给出。
+- 输出：控制台摘要、CSV（三张表）、单文件 HTML 分析单；`Imports` 只有 `stats` / `utils`。
+
+**主仓**
+
+- L4 从薄实现改为 `epiIneq`；`vertical_slice/run_e2e.R` 与 `case_panel/run_panel.R` 用 `ineq_counts()` 取代手写 CI 与率比，在各自分组口径（cut = 0.5 / median）下与旧实现逐位一致，golden 37 项未改。
+- 新增 `ineq_demo/run_ineq.R` 与 `ineq_l4` 编排阶段：4×4 合成格网注入弱势高负担，CI / SII 均为负且率比 > 1，曲线与 CI 自洽。
+- CI 增加 epiIneq 的 build / check / 单测；站点新增不平等分析单入口。
+
 ## v0.4.1 — 2026-11-22
 
 统一示例数据的病种代码为 `DEMO`，并重新发布受影响的两个包。
