@@ -9,7 +9,7 @@ L0 与 L1 的主入口：把 CSV 路径或 data.frame 转成 \code{epi_contract}
 以及 week / month / quarter / year 四种时间粒度（auto 可自动推断）。
 }
 \usage{
-read_counts(x, geo = NULL, mapping = NULL, disease = "HFRS",
+read_counts(x, geo = NULL, mapping = NULL, disease = "DEMO",
             time_step = c("auto", "week", "month", "quarter", "year"),
             n_periods = NULL, graph = NULL,
             adj_style = c("rook", "queen"), aliases = NULL, qc = TRUE,
@@ -38,7 +38,7 @@ read_counts(x, geo = NULL, mapping = NULL, disease = "HFRS",
 d <- data.frame(
   date = as.character(as.Date("2021-01-04") + 0:3),
   region = rep("A", 4), count = c(2, 3, 4, 5),
-  population = rep(1e5, 4), disease = rep("HFRS", 4))
+  population = rep(1e5, 4), disease = rep("DEMO", 4))
 core <- read_counts(d, time_step = "week")
 core$meta$time_step
 }

@@ -1,7 +1,7 @@
 Package: epiIngest
 Type: Package
 Title: Multi-Source Ingestion and Rule-Based Quality Control for Surveillance Counts
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
 Author: EpiStack Authors [aut, cre]
 Maintainer: EpiStack Authors <epistack@example.com>

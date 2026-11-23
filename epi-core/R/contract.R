@@ -31,7 +31,7 @@ epi_schema <- function(version = EPI_CONTRACT_VERSION) {
       ),
       disease = list(
         type = "character", required = TRUE,
-        note = "病种代码，例如 HFRS"
+        note = "病种代码，例如 DEMO"
       )
     ),
     derived    = c("year", "period"),

@@ -37,9 +37,10 @@ jobs:
         run: Rscript pipeline.R --check
 
       - name: Privacy guard
-        # 站点里不允许出现任何真实数据产物；显式校验，防止后续改动漏掉。
+        # 站点只放合成数据。病种代码统一用 DEMO，不能再按病种名拦文件名
+        # （否则会误伤 demo-report.html），改为拦真实/私有数据文件名与缓存对象。
         run: |
-          BAD=$(find pipeline_out/site -type f \( -iname '*HFRS*' -o -iname '*真实*' -o -iname '*.rds' \) -print)
+          BAD=$(find pipeline_out/site -type f \( -iname '*真实*' -o -iname '*private*' -o -iname '*.rds' \) -print)
           if [ -n "$BAD" ]; then
             echo "::error::站点目录出现真实数据产物：$BAD"
             exit 1

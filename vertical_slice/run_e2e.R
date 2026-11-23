@@ -85,7 +85,7 @@ for (r in seq_len(nrow(geo))) {
     if (r == 10L && i > length(dates) - 6L) lam <- lam * 2.8  # 地区10 注入 6 周暴发
     k <- k + 1L
     rows[[k]] <- data.frame(date = as.character(dates[i]), region = geo$region[r],
-                            count = rpois(1L, max(lam, 0.5)), disease = "HFRS",
+                            count = rpois(1L, max(lam, 0.5)), disease = "DEMO",
                             stringsAsFactors = FALSE)
   }
 }
@@ -103,7 +103,7 @@ core <- ingest_counts(
   geo       = geo,
   time_step = "week",
   n_periods = N_PERIODS,
-  disease   = "HFRS"
+  disease   = "DEMO"
 )
 validate_contract(core)                    # 字段 / 类型 / 主键 / 非负计数全量校验
 contract <- core$data

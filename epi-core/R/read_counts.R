@@ -46,7 +46,7 @@ EPI_FIELD_ALIASES <- list(
 
 #' 读取并规范化监测计数
 read_counts <- function(x, geo = NULL, mapping = NULL,
-                        disease = "HFRS",
+                        disease = "DEMO",
                         time_step = c("auto", "week", "month", "quarter", "year"),
                         n_periods = NULL,
                         graph = NULL,

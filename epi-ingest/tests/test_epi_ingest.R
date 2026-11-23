@@ -47,7 +47,7 @@ base <- expand.grid(region = regions, date = sprintf("2021-%02d-01", 1:6),
 base <- base[order(base$region, base$date), ]
 base$count <- rep(c(12, 15, 11, 18, 13, 16), 5)
 base$population <- 100000
-base$disease <- "HFRS"
+base$disease <- "DEMO"
 base[["地区名称"]] <- rep(c("甲市", "乙市", "丙市", "丁市", "戊市"), each = 6)
 rownames(base) <- NULL
 
@@ -132,7 +132,7 @@ dirty$count[13] <- "500"
 dirty$population[15] <- "10"
 add_row <- function(d, region, date, count, pop, nm) {
   rbind(d, data.frame(region = region, date = date, count = count, population = pop,
-                      disease = "HFRS", "地区名称" = nm, stringsAsFactors = FALSE,
+                      disease = "DEMO", "地区名称" = nm, stringsAsFactors = FALSE,
                       check.names = FALSE))
 }
 dirty <- add_row(dirty, "ZZ", "2021-03-01", "9", "100000", "未知市")

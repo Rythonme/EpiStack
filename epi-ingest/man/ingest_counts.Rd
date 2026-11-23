@@ -12,7 +12,7 @@ ingest_counts(x, rules = NULL, geo = NULL,
               time_step = c("auto", "week", "month", "quarter", "year"),
               n_periods = NULL, graph = NULL,
               adj_style = c("rook", "queen"),
-              disease = "HFRS", mapping = NULL,
+              disease = "DEMO", mapping = NULL,
               qc = TRUE, strict = TRUE, on_warn = NULL)
 }
 \arguments{

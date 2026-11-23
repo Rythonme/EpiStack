@@ -21,6 +21,6 @@ masks（每类问题的逐行逻辑掩码）。
 }
 \examples{
 d <- data.frame(date = "2021-01-04", region = "A", count = c(3, NA),
-                disease = "HFRS")
+                disease = "DEMO")
 epi_qc(d)$dropped
 }

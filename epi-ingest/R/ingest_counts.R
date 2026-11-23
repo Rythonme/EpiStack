@@ -24,12 +24,12 @@ ingest_counts <- function(x, rules = NULL, geo = NULL,
                           time_step = c("auto", "week", "month", "quarter", "year"),
                           n_periods = NULL, graph = NULL,
                           adj_style = c("rook", "queen"),
-                          disease = "HFRS", mapping = NULL,
+                          disease = "DEMO", mapping = NULL,
                           qc = TRUE, strict = TRUE, on_warn = NULL) {
   if (!requireNamespace("epiCore", quietly = TRUE))
     .epi_stop(paste0("ingest_counts() 需要 epiCore 生成契约：\n",
                      "  install.packages(\"https://github.com/Rythonme/EpiStack/",
-                     "releases/download/v0.1.1/epiCore_0.1.0.tar.gz\", repos = NULL, type = \"source\")"))
+                     "releases/download/v0.1.2/epiCore_0.1.1.tar.gz\", repos = NULL, type = \"source\")"))
   time_step <- match.arg(time_step)
   adj_style <- match.arg(adj_style)
   ing <- if (inherits(x, "epi_ingest")) x else ingest_read(x)

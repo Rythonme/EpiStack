@@ -8,7 +8,7 @@
     {"name": "region",     "type": "character", "required": true, "note": "经 normalize_region() 规范化的地区编码"},
     {"name": "count",      "type": "numeric",   "required": true, "note": "非负发病/报告计数"},
     {"name": "population", "type": "numeric",   "required": true, "note": "人口分母，必须为正数"},
-    {"name": "disease",    "type": "character", "required": true, "note": "病种代码，例如 HFRS"}
+    {"name": "disease",    "type": "character", "required": true, "note": "病种代码，例如 DEMO"}
   ],
   "derived": ["year", "period"],
   "geo_fields": ["region", "population", "ses", "row", "col"],

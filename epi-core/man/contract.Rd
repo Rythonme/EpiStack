@@ -34,6 +34,6 @@ invisibly TRUE；\code{epi_contract_check()} 返回问题描述字符向量（�
 \examples{
 epi_schema()$version
 d <- data.frame(date = as.Date("2021-01-04"), region = "A", count = 3,
-                population = 1e5, disease = "HFRS")
+                population = 1e5, disease = "DEMO")
 validate_contract(d)
 }

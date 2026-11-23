@@ -32,7 +32,7 @@ check("缺列时 strict 报错", inherits(tryCatch(
   error = function(e) e), "error"))
 check("缺列时非严格返回问题", length(epi_contract_check(data.frame(a = 1))) > 0L)
 good <- data.frame(date = as.Date("2020-01-01"), region = "A", count = 3,
-                   population = 100, disease = "HFRS", stringsAsFactors = FALSE)
+                   population = 100, disease = "DEMO", stringsAsFactors = FALSE)
 check("合法契约通过", isTRUE(validate_contract(good)))
 check("重复主键被拒绝", inherits(tryCatch(
   validate_contract(rbind(good, good)), error = function(e) e), "error"))
@@ -84,7 +84,7 @@ raw <- data.frame(
   date = as.character(as.Date("2020-01-01") + c(0, 1, 2, 3, 4)),
   region = c("A", "A", "B", "C", "A"),
   count = c(1, NA, 3, 4, 5),
-  disease = rep("HFRS", 5),
+  disease = rep("DEMO", 5),
   stringsAsFactors = FALSE
 )
 raw <- rbind(raw, raw[1L, ])                 # 重复键
@@ -101,7 +101,7 @@ dirty <- data.frame(
   date = as.character(as.Date("2021-01-04") + 0:4),
   region = rep("地区1", 5L),
   count = c(2, 3, NA, 5, 6),
-  disease = rep("HFRS", 5L),
+  disease = rep("DEMO", 5L),
   stringsAsFactors = FALSE
 )
 dirty <- rbind(dirty, dirty[1L, ])
