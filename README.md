@@ -17,11 +17,12 @@
 | L1 | `epiIngest` | 多源读取与质控 | CSV / Excel / 数据库 / API → 干净长表 |
 | L2 | `epiAlert` | 季节性基线、异常信号 | 长表 → 预警清单 |
 | L3 | `epiSpace` | Moran / LISA / BYM2 | 长表 + 权重 → 风险图 |
+| L3.5 | `epiRobust` | MAUP / 权重 / 空间稳健 SE / 多重比较 | 长表 + 权重 → 体检报告 |
 | L4 | `epiIneq` | 集中指数 / SII / 分解 | 长表 + SES → 不平等指标 |
 | L5 | `epiReport` | 单文件 HTML 报告 | 各层结果 → 可转发成果 |
 | L6 | `epiFlow` | 编排与可复现清单 | 全部 → 一键复现 |
 
-已发布 L0（`epiCore`）、L1（`epiIngest`）、L2（`epiAlert`）、L3（`epiSpace`）与 L4（`epiIneq`），其余层按月发布，接口不变。
+已发布 L0（`epiCore`）、L1（`epiIngest`）、L2（`epiAlert`）、L3（`epiSpace`）、L3.5（`epiRobust`）与 L4（`epiIneq`），其余层按月发布，接口不变。
 
 契约——所有层只认这三样东西：
 
@@ -63,18 +64,24 @@ install.packages(
   repos = NULL, type = "source"
 )
 
+# L3.5 空间稳健性体检
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.6.0/epiRobust_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+
 # L4 集中指数 / SII / 分解 / 可达性
 install.packages(
   "https://github.com/Rythonme/EpiStack/releases/download/v0.5.0/epiIneq_0.1.0.tar.gz",
   repos = NULL, type = "source"
 )
 
-library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace); library(epiIneq)
+library(epiCore); library(epiIngest); library(epiAlert); library(epiSpace); library(epiRobust); library(epiIneq)
 ```
 
 纯 R，无需编译工具，也不需要 Rtools。开发版安装方式见 [epi-core/README.md](epi-core/README.md)、
 [epi-ingest/README.md](epi-ingest/README.md)、[epi-alert/README.md](epi-alert/README.md)、
-[epi-space/README.md](epi-space/README.md) 与 [epi-ineq/README.md](epi-ineq/README.md)。
+[epi-space/README.md](epi-space/README.md)、[epi-robust/README.md](epi-robust/README.md) 与 [epi-ineq/README.md](epi-ineq/README.md)。
 
 ## 快速开始
 
@@ -223,6 +230,25 @@ CI = 1 − 2×人口加权集中曲线下面积，负值表示负担偏向低 SE
 CI、SII、率比方向一致才算证据。SES 与坐标从上游 `core$geo` 自动匹配；
 没有坐标时跳过可达性，其余指标照常给出。`ineq_methods()` 列出各方法适用范围。
 
+## 用 `epiRobust` 做空间稳健性体检
+
+```r
+library(epiRobust)
+
+d <- robust_example(n_side = 6L)   # 6×6 虚构格网，无任何真实病例
+x <- robust_check(d, scales = c(1L, 2L, 3L),
+                  styles = c("rook", "queen", "knn"),
+                  n_perm = 199L, seed = 20261124L)
+x$verdicts                         # 四项检查各自的结论
+x$maup$table                       # 多尺度 Moran / LISA / 热点数
+robust_report(x, "稳健性体检报告.html")
+```
+
+体检回答的是「这个结论是不是分析选择造出来的」：换聚合尺度会不会翻转 Moran 符号、
+换邻接定义会不会改变显著性、空间相关是否让标准误偏小、多重比较后还剩几个热点。
+演示中原始尺度 I = +0.9055，3× 聚合后翻转为 −0.0009，12 个显著热点校正后仅剩 1 个。
+`robust_methods()` 列出各检查的适用边界；包本身只依赖 `stats` / `utils`。
+
 ## 数据与隐私
 
 仓库只包含合成数据：`demo/make_demo_data.R` 用固定种子生成 31 个虚构地区（`D01`–`D31`）的面板，不对应任何真实行政区。所有示例和默认链路都只跑这份数据。
@@ -237,11 +263,13 @@ EpiStack/
 ├── epi-ingest/                # L1：正式 R 包（多源读取 / 质控 / 报告 / 脱敏）
 ├── epi-alert/                 # L2：正式 R 包（基线 / 分级 / 汇总 / 预警单）
 ├── epi-space/                 # L3：正式 R 包（Moran / LISA / 热点 / BYM2 模板）
+├── epi-robust/                # L3.5：正式 R 包（MAUP / 权重 / Conley SE / 多重比较）
 ├── epi-ineq/                  # L4：正式 R 包（集中曲线 / CI / SII / 分解 / 可达性）
 ├── ingest_demo/               # L1 演示：合成数据 → 质控单 → 契约等价性
 ├── alert_demo/                # L2 演示：注入暴发 → 回溯评估 → 预警单
 ├── space_demo/                # L3 演示：注入角落聚集 → 热点识别 → 分析单
 ├── ineq_demo/                 # L4 演示：弱势负担格网 → CI/SII → 分解 → 可达性
+├── robust_demo/               # L3.5 演示：多尺度 / 多邻接 → 稳健性体检报告
 ├── demo/                      # 合成数据生成器
 ├── vertical_slice/            # 六层端到端示例
 ├── case_panel/                # 面板用例（默认模拟数据，--local 读本地私有数据）
@@ -259,6 +287,7 @@ EpiStack/
 - [epi-ingest/README.md](epi-ingest/README.md) —— L1 包的使用与安装细节
 - [epi-alert/README.md](epi-alert/README.md) —— L2 包的使用与安装细节
 - [epi-space/README.md](epi-space/README.md) —— L3 包的使用与安装细节
+- [epi-robust/README.md](epi-robust/README.md) —— L3.5 包的使用与安装细节
 - [epi-ineq/README.md](epi-ineq/README.md) —— L4 包的使用与安装细节
 
 ## 许可

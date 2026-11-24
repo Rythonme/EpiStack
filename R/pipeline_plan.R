@@ -50,6 +50,8 @@ EPI_STACK_PLAN <- list(
          current_impl = "formal", impl = "epi-alert/R/*.R", satellite = "epi-alert",   since = "2027-01"),
     list(id = "L3", name = "epi-space",   role = "空间自相关 / 热点 / BYM2 模板",
          current_impl = "formal", impl = "epi-space/R/*.R", satellite = "epi-space",   since = "2027-02"),
+    list(id = "L3.5", name = "epiRobust",  role = "MAUP / 权重 / 空间稳健 SE / 多重比较体检",
+         current_impl = "formal", impl = "epi-robust/R/*.R", satellite = "epi-robust", since = "2026-11"),
     list(id = "L4", name = "epi-ineq",    role = "集中指数 / SII / 可达性",
          current_impl = "formal", impl = "epi-ineq/R/*.R", satellite = "epi-ineq",    since = "2027-04"),
     list(id = "L5", name = "epi-report",  role = "单文件 HTML 报告与看板",
@@ -110,6 +112,16 @@ EPI_STACK_PLAN <- list(
       report = "不平等分析单.html"
     ),
     list(
+      id = "robust_l35", label = "L3.5 稳健性体检：MAUP → 权重 → Conley SE → 多重比较",
+      script = "robust_demo/run_pipeline_robust.R",
+      layers = c("L0", "L3", "L3.5"),
+      privacy = "synthetic", requires = character(0),
+      inputs = c("robust_demo/run_pipeline_robust.R"),
+      outputs = c("稳健性体检报告.html", "robust_metrics.json", "maup_summary.csv",
+                  "weights_summary.csv", "conley_summary.csv", "multiplicity_regions.csv"),
+      report = "稳健性体检报告.html"
+    ),
+    list(
       id = "panel_demo", label = "模拟面板端到端演示（默认）",
       script = "case_panel/run_panel.R",
       layers = c("L0", "L1", "L2", "L3", "L4", "L5", "L6"),
@@ -135,7 +147,7 @@ EPI_STACK_PLAN <- list(
   ),
   shared_inputs = c(
     "bootstrap_core.R", "bootstrap_ingest.R", "bootstrap_alert.R", "bootstrap_space.R",
-    "bootstrap_ineq.R",
+    "bootstrap_ineq.R", "bootstrap_robust.R",
     "R/pipeline_plan.R", "R/epi_json.R",
     "demo/make_demo_data.R",
     "epi-core/DESCRIPTION", "epi-core/NAMESPACE",
@@ -162,6 +174,10 @@ EPI_STACK_PLAN <- list(
     "epi-ineq/R/utils.R", "epi-ineq/R/curve.R", "epi-ineq/R/sii.R",
     "epi-ineq/R/groups.R", "epi-ineq/R/decompose.R", "epi-ineq/R/access.R",
     "epi-ineq/R/summary.R", "epi-ineq/R/counts.R", "epi-ineq/R/report.R",
-    "epi-ineq/R/example.R"
+    "epi-ineq/R/example.R",
+    "epi-robust/DESCRIPTION", "epi-robust/NAMESPACE",
+    "epi-robust/R/utils.R", "epi-robust/R/example.R", "epi-robust/R/weights.R",
+    "epi-robust/R/maup.R", "epi-robust/R/conley.R", "epi-robust/R/multiplicity.R",
+    "epi-robust/R/robust.R", "epi-robust/R/report.R"
   )
 )

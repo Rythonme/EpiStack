@@ -2,6 +2,23 @@
 
 遵循[语义化版本](https://semver.org/lang/zh-CN/)。每个包独立版本，发布物同时提供源码 tarball。
 
+## v0.6.0 — 2026-11-24
+
+新增 L3.5 卫星包 `epiRobust` 0.1.0，并接入主仓 `pipeline.R` 编排链路。
+
+**空间稳健性体检**
+
+- `robust_maup()`：规则格网整数倍聚合，多尺度重算 Moran's I 与 LISA，输出结论区间与符号翻转判定。
+- `robust_weights()`：rook / queen / kNN 三种邻接下的方向与显著性对比。
+- `robust_conley()`：Bartlett 核 Conley HAC 标准误，多距离截断与朴素 SE 对照；退化截断返回 NA 而非假标准误。
+- `robust_multiplicity()`：Bonferroni 与 BH-FDR 校正，报告显著地区丢失数。
+- `robust_check()` / `robust_report()`：一键体检与单文件离线 HTML 报告。Moran / LISA 公式和置换口径与 `epiSpace` 逐字一致；`Imports` 只有 `stats` / `utils`。
+
+**验证**
+
+- 23 项单元测试全过；`R CMD check` 0 ERROR / 1 WARNING（中文文案可移植性提示，与前几层一致）/ 0 NOTE。
+- 合成演示：原始尺度 I = +0.9055，3× 聚合后翻转为 -0.0009；12 个显著热点经多重比较校正后仅剩 1 个；Conley SE 最大放大 2.04 倍。
+
 ## v0.5.0 — 2026-11-23
 
 新增 L4 卫星包 `epiIneq` 0.1.0，并接入主仓链路。

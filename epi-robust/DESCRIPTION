@@ -1,0 +1,26 @@
+Package: epiRobust
+Type: Package
+Title: Spatial Robustness Diagnostics for Surveillance Data
+Version: 0.1.0
+Authors@R: person("EpiStack", "Authors", email = "epistack@example.com", role = c("aut", "cre"))
+Author: EpiStack Authors [aut, cre]
+Maintainer: EpiStack Authors <epistack@example.com>
+Description: Spatial robustness layer (L3.5) of the EpiStack ecosystem.
+    Audits how far a spatial epidemiologic conclusion depends on analyst
+    choices: the modifiable areal unit problem (MAUP), adjacency definition,
+    spatial dependence in standard errors, and multiplicity in local cluster
+    tests. Computes scale and zoning sensitivity, rook/queen/kNN weight
+    sensitivity, Conley heteroskedasticity-and-autocorrelation-consistent
+    standard errors at multiple distance cutoffs, and Bonferroni/BH-FDR
+    adjustments, then compiles a single-file HTML diagnosis report. Core
+    statistics use base R only; no spatial or Bayesian dependency is required.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 3.6.0)
+Imports: stats, utils
+Suggests: epiCore, epiSpace, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+NeedsCompilation: no
+URL: https://github.com/Rythonme/EpiStack
+BugReports: https://github.com/Rythonme/EpiStack/issues
+Config/roxygen2/version: 8.0.0

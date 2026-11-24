@@ -124,6 +124,7 @@ build_site <- function(results) {
   copy(file.path(out_root, "alert_l2", "预警单_回溯.html"), "alert-report.html")
   copy(file.path(out_root, "space_l3", "空间分析单.html"), "space-report.html")
   copy(file.path(out_root, "ineq_l4", "不平等分析单.html"), "ineq-report.html")
+  copy(file.path(out_root, "robust_l35", "稳健性体检报告.html"), "robust-report.html")
   copy(file.path(out_root, "panel_demo", "面板分析报告_模拟.html"), "demo-report.html")
   copy(file.path(root, "项目进展看板.html"), "kanban.html")
   copy(file.path(root, "kanban_data.js"), "kanban_data.js")
@@ -157,6 +158,7 @@ build_site <- function(results) {
     '<a class="card" href="alert-report.html">预警单（回溯）<small>31 地区月报 · 季节性基线带 · 注入暴发命中</small></a>',
     '<a class="card" href="space-report.html">空间分析单<small>4×4 合成格网 · 全局 Moran · LISA 热点</small></a>',
     '<a class="card" href="ineq-report.html">不平等分析单<small>4×4 合成格网 · CI / SII · 分解 · 可达性</small></a>',
+    '<a class="card" href="robust-report.html">稳健性体检报告<small>6×6 合成格网 · MAUP / 权重 / Conley SE / 多重比较</small></a>',
     '<a class="card" href="demo-report.html">模拟面板演示报告<small>31 地区面板 · 预警 / 空间 / 不平等 · 纯合成</small></a>',
     '<a class="card" href="kanban.html">交付看板<small>各层任务、版本里程碑与更新记录</small></a>',
     '</div>',
