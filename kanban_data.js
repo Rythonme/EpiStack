@@ -8,7 +8,7 @@ window.KANBAN_DATA = {
     repo: "github.com/Rythonme/EpiStack（公开 · MIT）",
     updated: "2026-11-24",
     owner: "Rythonme",
-    target: "逐月补全 L3.5 与 L5–L6，每层可独立安装"
+    target: "逐月补全 L5–L6，每层可独立安装"
   },
   columns: [
     { id: "todo",    title: "待办",   color: "#718096" },
@@ -26,7 +26,7 @@ window.KANBAN_DATA = {
     { id: "E7", title: "L2 预警层 epiAlert 0.1.0", desc: "四种基线方法、连续超限与倍数分级、按地区汇总、单文件预警单；11 个导出函数，86 项断言", tag: "发布", week: "v0.3.0", status: "done" },
     { id: "E8", title: "L3 空间层 epiSpace 0.1.0", desc: "全局 Moran 置换检验、局部 LISA 四象限、显著热点/冷点、BYM2 模板；11 个导出函数，67 项断言", tag: "发布", week: "v0.4.0", status: "done" },
     { id: "E9", title: "L4 不平等层 epiIneq 0.1.0", desc: "人口加权集中曲线与 CI、SII 加权回归、SES 分组分解、距离衰减可达性；12 个导出函数，63 项断言", tag: "发布", week: "v0.5.0", status: "done" },
-    { id: "R1", title: "L3.5 稳健性层 epiRobust 0.1.0", desc: "MAUP 多尺度聚合、rook/queen/kNN 权重敏感性、Conley HAC 空间稳健 SE、Bonferroni/BH-FDR 多重比较；单文件 HTML 体检报告；23 项单测，R CMD check 0 ERROR", tag: "体检", week: "v0.6", status: "done" },
+    { id: "R1", title: "L3.5 稳健性层 epiRobust 0.1.0", desc: "MAUP 多尺度聚合、rook/queen/kNN 权重敏感性、Conley HAC 空间稳健 SE、Bonferroni/BH-FDR 多重比较；单文件 HTML 体检报告；23 项单测，R CMD check 0 ERROR；已作为 L3.5 stage 接入 pipeline.R", tag: "体检", week: "v0.6", status: "done" },
     { id: "L5", title: "L5 epiReport", desc: "多层结果汇编、报告脱敏开关、交互看板", tag: "报告", week: "计划", status: "backlog" },
     { id: "L6", title: "L6 epiFlow", desc: "全流水线编排、增量重跑、定时调度", tag: "编排", week: "计划", status: "backlog" }
   ],
@@ -38,10 +38,11 @@ window.KANBAN_DATA = {
     { name: "v0.4 · epiSpace", date: "2026-11-22", state: "done" },
     { name: "v0.4.1 · 发布物清理", date: "2026-11-22", state: "done" },
     { name: "v0.5 · epiIneq", date: "2026-11-23", state: "done" },
-    { name: "v0.6 · epiRobust", date: "开发中", state: "" },
+    { name: "v0.6 · epiRobust", date: "2026-11-24", state: "done" },
     { name: "v1.0 · 全层集成", date: "计划中", state: "" }
   ],
   changelog: [
+    { date: "2026-11-24", text: "v0.6.0 已打 tag 并发布 Release（含 epiRobust_0.1.0.tar.gz）；epiRobust 以独立 stage 接入 pipeline.R：7 阶段全跑通，golden 37 项仍全过，站点新增稳健性体检报告卡片。" },
     { date: "2026-11-24", text: "L3.5 稳健性层 epiRobust 0.1.0 建成：四项体检一键出报告。合成演示中 Moran's I 从 +0.9055 在 3× 聚合后翻转为 -0.0009，12 个显著热点经多重比较校正后仅剩 1 个，Conley SE 最大放大 2.04 倍。" },
     { date: "2026-11-23", text: "v0.5.0：L4 不平等层 epiIneq 发布，切片改用 ineq_counts()，CI 与率比与旧实现逐位一致，golden 37 项全过。" },
     { date: "2026-11-22", text: "v0.4.1：示例病种代码统一为 DEMO，epiCore 0.1.1 与 epiIngest 0.2.1 重发，旧 tarball 资产移除。" },
