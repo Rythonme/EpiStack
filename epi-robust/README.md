@@ -20,7 +20,11 @@ Moran 与 LISA 的公式和置换口径与 `epiSpace` 逐字一致，结果可�
 ## 安装
 
 ```r
-install.packages("epiRobust_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages(
+  "https://github.com/Rythonme/EpiStack/releases/download/v0.6.0/epiRobust_0.1.0.tar.gz",
+  repos = NULL, type = "source"
+)
+# 开发版：remotes::install_github("Rythonme/EpiStack", subdir = "epi-robust", ref = "v0.6.0")
 ```
 
 ## 五分钟上手

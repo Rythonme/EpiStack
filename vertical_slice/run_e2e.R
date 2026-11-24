@@ -40,6 +40,14 @@ out_html <- if (nzchar(out_env)) file.path(out_env, "端到端演示报告.html"
 out_dir  <- dirname(out_html)
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 cache_dir <- file.path(out_dir, "cache")
+
+# 日志里只显示相对路径，避免把本机目录写进可转发的运行结果
+show_rel <- function(p) {
+  b <- normalizePath(root, winslash = "/", mustWork = FALSE)
+  q <- normalizePath(p, winslash = "/", mustWork = FALSE)
+  if (startsWith(paste0(q, "/"), paste0(b, "/")))
+    paste0(".", substring(q, nchar(b) + 1L)) else q
+}
 if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
 
 SEED      <- 20261110L
@@ -350,4 +358,4 @@ writeLines(enc2utf8(manifest), file.path(out_dir, "run_manifest.json"), useBytes
 mark_stage("L6 epi-flow", sprintf("manifest + 4 个阶段缓存已写入 cache/；总耗时 %.2f 秒",
                                   as.numeric(difftime(Sys.time(), t_start, units = "secs"))))
 
-cat(sprintf("\n端到端链路完成：%s\n", out_html))
+cat(sprintf("\n端到端链路完成：%s\n", show_rel(out_html)))

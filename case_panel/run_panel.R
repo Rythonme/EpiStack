@@ -44,6 +44,14 @@ out_dir <- if (nzchar(out_env)) out_env else file.path(here, "output")
 cache_dir <- file.path(out_dir, "cache")
 dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
 
+# 日志里只显示相对路径，避免把本机目录写进可转发的运行结果
+show_rel <- function(p) {
+  b <- normalizePath(root, winslash = "/", mustWork = FALSE)
+  q <- normalizePath(p, winslash = "/", mustWork = FALSE)
+  if (startsWith(paste0(q, "/"), paste0(b, "/")))
+    paste0(".", substring(q, nchar(b) + 1L)) else q
+}
+
 SEED <- 20261110L
 K_SIGMA <- 1.645
 
@@ -532,4 +540,4 @@ writeLines(enc2utf8(manifest),
 mark_stage("L6 epi-flow", sprintf("manifest + 4 个阶段缓存已写入 %s/cache/；总耗时 %.2f 秒",
                                   basename(out_dir),
                                   as.numeric(difftime(Sys.time(), t_start, units = "secs"))))
-cat(sprintf("\n地区面板端到端演示完成（%s）：%s\n", data_label, out_html))
+cat(sprintf("\n地区面板端到端演示完成（%s）：%s\n", data_label, show_rel(out_html)))

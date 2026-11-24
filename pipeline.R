@@ -31,6 +31,14 @@ out_root <- if (!is.na(ix_out) && length(cli_args) >= ix_out + 1L)
   cli_args[ix_out + 1L] else file.path(root, "pipeline_out")
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 
+# 面向读者的路径显示：清单与日志只记录相对路径，不把本机目录写进产物
+rel_path <- function(path) {
+  p <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  b <- normalizePath(root, winslash = "/", mustWork = FALSE)
+  if (startsWith(paste0(p, "/"), paste0(b, "/")))
+    paste0(".", substring(p, nchar(b) + 1L)) else p
+}
+
 # ---------------- --list：只打印计划 ----------------
 if (flag("--list")) {
   cat(sprintf("EpiStack 分层计划 v%s ｜ 契约 v%s ｜ 种子 %d\n\n",
@@ -174,7 +182,7 @@ build_site <- function(results) {
 
 # ---------------- 主流程 ----------------
 cat(sprintf("EpiStack pipeline v%s ｜ R %s ｜ 契约 v%s ｜ 产物 %s\n",
-            plan$plan_version, getRversion(), plan$contract_version, out_root))
+            plan$plan_version, getRversion(), plan$contract_version, rel_path(out_root)))
 todo <- plan$pipelines
 if (!flag("--all"))
   todo <- Filter(function(p) identical(p$privacy, "synthetic"), todo)
@@ -223,7 +231,7 @@ manifest <- list(
     satellite = l$satellite, since = l$since)),
   stages = unname(lapply(results, function(r) r[setdiff(names(r), "fingerprint")])),
   smoke = if (is.null(smoke)) list(executed = FALSE) else smoke,
-  site = list(path = site_dir,
+  site = list(path = rel_path(site_dir),
               privacy = "仅合成数据报告与看板；真实数据链路产物不发布"),
   reproduce = "Rscript pipeline.R --check",
   privacy = "原始监测数据只读；真实数据与本地报告不入库、不上传"
@@ -238,6 +246,6 @@ cat(sprintf("\n编排完成：%d 个阶段（%d ran / %d cached / %d skipped / %
             length(results), sum(vapply(results, function(r) r$status, character(1)) == "ran"),
             sum(vapply(results, function(r) r$status, character(1)) == "cached"),
             sum(vapply(results, function(r) r$status, character(1)) == "skipped_missing_data"),
-            sum(failed), site_dir))
+            sum(failed), rel_path(site_dir)))
 if (any(failed) || smoke_bad)
   quit(save = "no", status = 1L, runLast = FALSE)
