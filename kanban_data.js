@@ -42,6 +42,7 @@ window.KANBAN_DATA = {
     { name: "v1.0 · 全层集成", date: "计划中", state: "" }
   ],
   changelog: [
+    { date: "2026-11-24", text: "通篇检查：产物日志/manifest 改为相对路径，去掉本机目录；清理调试残留与旧日志；入库文件复核无个人敏感信息（仅保留公开安装链接）。golden 37 项复验仍全过。" },
     { date: "2026-11-24", text: "v0.6.0 已打 tag 并发布 Release（含 epiRobust_0.1.0.tar.gz）；epiRobust 以独立 stage 接入 pipeline.R：7 阶段全跑通，golden 37 项仍全过，站点新增稳健性体检报告卡片。" },
     { date: "2026-11-24", text: "L3.5 稳健性层 epiRobust 0.1.0 建成：四项体检一键出报告。合成演示中 Moran's I 从 +0.9055 在 3× 聚合后翻转为 -0.0009，12 个显著热点经多重比较校正后仅剩 1 个，Conley SE 最大放大 2.04 倍。" },
     { date: "2026-11-23", text: "v0.5.0：L4 不平等层 epiIneq 发布，切片改用 ineq_counts()，CI 与率比与旧实现逐位一致，golden 37 项全过。" },
